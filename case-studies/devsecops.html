@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero-Trust DevSecOps | Case Study</title>
+    <!-- Fonts -->
+    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Patrick+Hand&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <!-- Dark Theme Prism for Logs -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        body { background-color: var(--bg-paper); color: var(--text-ink); }
+        
+        .case-hero {
+            padding: 140px 0 80px;
+            background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(220, 38, 38, 0.05) 100%);
+            border-bottom: 2px dashed #ddd;
+        }
+
+        .back-link {
+            font-family: var(--font-hand);
+            font-size: 1.4rem;
+            color: var(--text-light);
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+            transform: rotate(-1deg);
+        }
+        .back-link:hover { color: #ef4444; transform: rotate(0deg) scale(1.05); }
+
+        .tag-row { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .tech-tag {
+            background: white;
+            border: 2px solid var(--text-ink);
+            padding: 8px 16px;
+            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; /* Sketchy Border */
+            font-family: var(--font-hand);
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+        }
+
+        /* --- CLARITY PASS STYLES --- */
+        .context-block {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 60px 0;
+            padding: 40px; border: 3px solid var(--text-ink); border-radius: 20px;
+            background: #fff; box-shadow: 10px 10px 0 rgba(0,0,0,0.05); position: relative;
+        }
+        .context-item h3 { font-family: var(--font-hand); font-size: 1.8rem; color: var(--text-light); margin-bottom: 10px; }
+        .context-item p { font-size: 1.1rem; line-height: 1.6; }
+        
+        .comparison-table {
+            width: 100%; border-collapse: separate; border-spacing: 0; margin: 40px 0;
+            border: 2px solid var(--text-ink); border-radius: 12px; overflow: hidden;
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.05);
+        }
+        .comparison-table th, .comparison-table td { padding: 20px; border-bottom: 2px dashed #ddd; text-align: left; }
+        .comparison-table th { background: #fef2f2; font-family: var(--font-hand); font-size: 1.3rem; }
+        .comparison-table tr:last-child td { border-bottom: none; }
+        .bad { color: #ef4444; } .good { color: #b91c1c; font-weight: 700; }
+
+        /* --- EXISTING SKETCH INFOGRAPHICS --- */
+        .pipeline-stepper {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin: 60px 0; padding: 20px 0; position: relative;
+        }
+        .pipeline-stepper::before {
+            content: ''; position: absolute; top: 40px; left: 0; width: 100%; height: 4px;
+            background: repeating-linear-gradient(90deg, #ddd, #ddd 10px, transparent 10px, transparent 20px);
+            z-index: 1;
+        }
+        .step-node {
+            position: relative; z-index: 2; width: 18%; text-align: center;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .step-node:hover { transform: scale(1.05); }
+        .step-circle {
+            width: 60px; height: 60px; background: white; border: 3px solid var(--text-ink); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;
+            font-size: 1.5rem; box-shadow: 5px 5px 0 rgba(0,0,0,0.1);
+        }
+        .step-node.active .step-circle { border-color: #ef4444; box-shadow: 5px 5px 0 #ef4444; }
+        .step-label { font-family: var(--font-hand); font-weight: 700; display: block; }
+        .step-tool { font-family: 'JetBrains Mono'; font-size: 0.8rem; color: #666; background: #eee; padding: 2px 6px; border-radius: 4px; }
+
+        .console-frame {
+            background: #1e1e1e; border: 3px solid var(--text-ink); border-radius: 12px;
+            padding: 20px; color: #d4d4d4; font-family: 'JetBrains Mono'; overflow: hidden;
+            box-shadow: 10px 10px 0 rgba(0,0,0,0.2); margin-top: 20px; min-height: 250px; position: relative;
+        }
+        .console-header {
+            border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;
+            display: flex; align-items: center; gap: 10px; color: #888;
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: #555; }
+        .cmd { color: #fca5a5; } .crit { color: #ef4444; font-weight: 700; } .pass { color: #4ade80; }
+
+        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin: 60px 0; }
+        .sketch-metric {
+            background: #fff; border: 2px solid var(--text-ink); border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+            padding: 30px; text-align: center; box-shadow: 5px 5px 0 rgba(0,0,0,0.05);
+        }
+        .m-val { font-size: 2.5rem; font-weight: 700; color: #b91c1c; display: block; margin-bottom: 5px; }
+        .m-label { font-family: var(--font-hand); color: #666; font-size: 1.1rem; }
+        
+        .code-notebook {
+            background: #fff; border: 1px solid #ddd; border-left: 5px solid #ef4444;
+            padding: 20px; font-family: 'JetBrains Mono'; box-shadow: 5px 5px 0 rgba(0,0,0,0.05);
+            margin: 40px 0; position: relative;
+        }
+        
+        .hand-note { font-family: var(--font-hand); color: var(--text-light); font-size: 1.2rem; transform: rotate(-2deg); }
+
+    </style>
+</head>
+<body>
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="../index.html" class="nav-logo">Shrinet82<span class="highlight-dot">.</span></a>
+            <a href="../index.html#work" class="btn-nav">Back to Work</a>
+        </div>
+    </nav>
+
+    <header class="case-hero">
+        <div class="container">
+            <a href="../index.html" class="back-link">← Back to Portfolio</a>
+            <h1 class="hero-title">Zero-Trust DevSecOps</h1>
+            <p class="hero-intro">
+                "Shift Left" Security Pipeline. Catching <span class="highlight-marker">CVEs</span> before they hit production.
+            </p>
+            
+            <div class="tag-row">
+                <span class="tech-tag">Azure DevOps</span>
+                <span class="tech-tag">Trivy</span>
+                <span class="tech-tag">Gitleaks</span>
+                <span class="tech-tag">OWASP ZAP</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <!-- 1. CLARITY PASS: CONTEXT BLOCK -->
+        <div class="context-block">
+            <div class="context-item">
+                <h3>The Problem 🔓</h3>
+                <p>
+                    Security was an afterthought ("Shift Right"). Developers would push code, and security teams would only find 
+                    critical vulnerabilities (CVEs) days later during a manual audit—often too late.
+                </p>
+            </div>
+            <div class="context-item" style="border-left: 2px dashed #ddd; padding-left: 40px;">
+                <h3>The Solution 🛡️</h3>
+                <p>
+                    I implemented a **Zero-Trust SSDF Pipeline**. Security checks (Gitleaks, Trivy, Checkov) run automatically on 
+                    every commit. If a critical vulnerability is found, the build fails immediately.
+                </p>
+            </div>
+            <div class="hand-note" style="position: absolute; bottom: -30px; right: 20px; color: #ef4444;">
+                <span class="arrow-drawn">swirly_arrow_up</span> "Security at Speed"
+            </div>
+        </div>
+
+        <!-- 2. CLARITY PASS: COMPARISON TABLE -->
+        <h2 class="section-title">Shift-Right vs. Shift-Left</h2>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Security Check</th>
+                    <th>Traditional Audit (Before)</th>
+                    <th>DevSecOps Pipeline (After)</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Secret Scanning</strong></td>
+                    <td class="bad">Manual Review (Missed often)</td>
+                    <td class="good">Gitleaks on Commit</td>
+                    <td><strong>Zero Leaks</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Container CVEs</strong></td>
+                    <td class="bad">Weekly Scans</td>
+                    <td class="good">Build-time Block</td>
+                    <td><strong>100% Patch Rate</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>SLA for Fixes</strong></td>
+                    <td class="bad">Days / Weeks</td>
+                    <td class="good">Minutes (Build Fail)</td>
+                    <td><strong>Immediate</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Evidence</strong></td>
+                    <td class="bad">PDF Report</td>
+                    <td class="good">Automated SBOM</td>
+                    <td><strong>Compliance Ready</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- 3. PIPELINE STEPPER -->
+        <h2 class="section-title">The Secure Pipeline (SSDF)</h2>
+        <div class="hand-note" style="text-align:center; display:block; margin-bottom:40px;">Select a stage to view logs:</div>
+        
+        <div class="pipeline-stepper">
+            <div class="step-node active" onclick="showLog(1)">
+                <div class="step-circle">🕵️</div>
+                <span class="step-label">Secrets</span>
+                <span class="step-tool">Gitleaks</span>
+            </div>
+            <div class="step-node" onclick="showLog(2)">
+                <div class="step-circle">📦</div>
+                <span class="step-label">Build</span>
+                <span class="step-tool">CycloneDX</span>
+            </div>
+            <div class="step-node" onclick="showLog(3)">
+                <div class="step-circle">🛡️</div>
+                <span class="step-label">Scan</span>
+                <span class="step-tool">Trivy</span>
+            </div>
+            <div class="step-node" onclick="showLog(4)">
+                <div class="step-circle">🚀</div>
+                <span class="step-label">Deploy</span>
+                <span class="step-tool">ArgoCD</span>
+            </div>
+            <div class="step-node" onclick="showLog(5)">
+                <div class="step-circle">⚡</div>
+                <span class="step-label">DAST</span>
+                <span class="step-tool">ZAP</span>
+            </div>
+        </div>
+
+        <div class="console-frame">
+            <div class="console-header">
+                <div class="dot" style="background:#ef4444"></div>
+                <div class="dot" style="background:#f59e0b"></div>
+                <div class="dot" style="background:#22c55e"></div>
+                <span style="font-size: 0.8rem; margin-left: 10px;">pipeline-agent-01</span>
+            </div>
+            <div id="console-content">
+                <span class="cmd">$ gitleaks detect --source=. --verbose</span><br>
+                10:00:22 [INFO] detecting secrets...<br>
+                10:00:23 [WARN] Finding: AWS Secret Key "AKIA..."<br>
+                10:00:23 [INFO] ...<br>
+                <br>
+                <span class="pass">[SUCCESS]</span> No *active* secrets found (1 false positive ignored via .gitleaks.toml).
+            </div>
+        </div>
+
+        <!-- 4. METRICS (Sketch Cards) -->
+        <h2 class="section-title">Pipeline Stats</h2>
+        <div class="metrics-grid">
+            <div class="sketch-metric">
+                <span class="m-val">32m 52s</span>
+                <span class="m-label">Total Duration</span>
+            </div>
+            <div class="sketch-metric">
+                <span class="m-val">3</span>
+                <span class="m-label">Scanning Tools</span>
+            </div>
+            <div class="sketch-metric">
+                <span class="m-val">100%</span>
+                <span class="m-label">Automated Gate</span>
+            </div>
+        </div>
+
+        <!-- 5. ARTIFACTS -->
+        <h2 class="section-title">Generated Artifacts</h2>
+        <div class="code-notebook">
+            <pre><code class="language-bash"># Build output directory
+/artifacts
+├── gitleaks-report.json   # 3 B (Clean)
+├── checkov-report.json    # 3 MB
+├── backend-sbom.json      # 230 KB (CycloneDX)
+└── zap_report.html        # 83 KB (DAST Results)</code></pre>
+            <div class="hand-note" style="position: absolute; right: 20px; bottom: 20px; transform: rotate(-3deg); color: #ef4444;">
+                Evidence!
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <div class="container" style="text-align:center">
+            <p class="copyright">© 2026 Shashwat Pratap</p>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script>
+        const logs = {
+            1: `<span class="cmd">$ gitleaks detect --source=.</span><br><span class="pass">[SUCCESS]</span> No active secrets found.<br>Filter: .gitleaks.toml allowlist active.`,
+            2: `<span class="cmd">$ cyclonedx-py -r requirements.txt</span><br>Generating SBOM...<br>Output: backend-sbom.json (230 KB)<br><span class="pass">[Done]</span>`,
+            3: `<span class="cmd">$ trivy image myapp:v1</span><br>Scanning...<br>CVE-2025-43859 (h11): <span class="crit">CRITICAL</span><br>Action: Upgraded h11 to 0.16.0<br><span class="pass">[RE-SCAN PASS]</span>`,
+            4: `<span class="cmd">$ kubectl apply -f k8s/</span><br>deployment.apps/backend created<br>service/backend created<br><span class="pass">[SUCCESS]</span> Pods Running (2/2)`,
+            5: `<span class="cmd">$ zap-cli active-scan</span><br>Target: http://frontend-svc<br>Scanning for XSS... <span class="pass">[Clean]</span><br>Report: zap_report.html generated.`
+        };
+
+        function showLog(id) {
+            document.getElementById('console-content').innerHTML = logs[id];
+            document.querySelectorAll('.step-node').forEach((el, idx) => {
+                if(idx + 1 === id) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+        }
+    </script>
+</body>
+</html>

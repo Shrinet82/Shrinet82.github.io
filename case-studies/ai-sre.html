@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI SRE Agent | Case Study</title>
+    <!-- Fonts -->
+    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Patrick+Hand&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <!-- Light Theme Prism -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" />
+    <style>
+        /* Case Study Overrides for Sketchbook Theme */
+        body { background-color: var(--bg-paper); color: var(--text-ink); }
+        
+        .case-hero {
+            padding: 140px 0 80px;
+            background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(50, 95, 255, 0.05) 100%);
+            border-bottom: 2px dashed #ddd;
+        }
+
+        .back-link {
+            font-family: var(--font-hand);
+            font-size: 1.4rem;
+            color: var(--text-light);
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+            transform: rotate(-1deg);
+        }
+        .back-link:hover { color: var(--accent-blue); transform: rotate(0deg) scale(1.05); }
+
+        .tag-row { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .tech-tag {
+            background: white;
+            border: 2px solid var(--text-ink);
+            padding: 8px 16px;
+            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; /* Sketchy Border */
+            font-family: var(--font-hand);
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+        }
+
+        /* --- CLARITY PASS STYLES --- */
+        .context-block {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 60px 0;
+            padding: 40px; border: 3px solid var(--text-ink); border-radius: 20px;
+            background: #fff; box-shadow: 10px 10px 0 rgba(0,0,0,0.05); position: relative;
+        }
+        .context-item h3 { font-family: var(--font-hand); font-size: 1.8rem; color: var(--text-light); margin-bottom: 10px; }
+        .context-item p { font-size: 1.1rem; line-height: 1.6; }
+        
+        .comparison-table {
+            width: 100%; border-collapse: separate; border-spacing: 0; margin: 40px 0;
+            border: 2px solid var(--text-ink); border-radius: 12px; overflow: hidden;
+            box-shadow: 5px 5px 0 rgba(0,0,0,0.05);
+        }
+        .comparison-table th, .comparison-table td { padding: 20px; border-bottom: 2px dashed #ddd; text-align: left; }
+        .comparison-table th { background: #f8fafc; font-family: var(--font-hand); font-size: 1.3rem; }
+        .comparison-table tr:last-child td { border-bottom: none; }
+        .bad { color: #ef4444; } .good { color: #22c55e; font-weight: 700; }
+
+        /* --- EXISTING SKETCHY INFOGRAPHICS --- */
+        .pipeline-doodle {
+            display: flex; align-items: center; justify-content: space-between;
+            background: white; padding: 40px;
+            border: 3px solid var(--text-ink);
+            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+            margin: 60px 0; position: relative;
+        }
+        .b-step { text-align: center; position: relative; z-index: 2; }
+        .b-circle {
+            width: 80px; height: 80px; border: 3px solid var(--text-ink); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 2rem;
+            background: #fff; margin: 0 auto 10px; box-shadow: 5px 5px 0 rgba(0,0,0,0.1);
+        }
+        .b-arrow { font-family: var(--font-hand); font-size: 2rem; color: var(--text-light); }
+
+        .schema-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 40px 0; }
+        .db-card {
+            background: #fff; border: 2px solid var(--text-ink); border-radius: 12px; padding: 20px;
+            font-family: 'JetBrains Mono'; font-size: 0.9rem;
+        }
+        .db-title { font-weight: 700; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 10px; display:flex; justify-content:space-between;}
+        .db-field { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #eee; }
+        .pk { color: #d35400; font-weight:700; } .type { color: #7f8c8d; }
+
+        .code-notebook {
+            background: #fff; border: 1px solid #ddd; border-left: 5px solid #ff4d4d;
+            padding: 20px; font-family: 'JetBrains Mono'; box-shadow: 5px 5px 0 rgba(0,0,0,0.05);
+            margin: 40px 0; background-image: linear-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 100% 1.5rem; line-height: 1.5rem; positioned: relative;
+        }
+        
+        .hand-note { font-family: var(--font-hand); color: var(--text-light); font-size: 1.2rem; transform: rotate(-2deg); }
+    </style>
+</head>
+<body>
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="../index.html" class="nav-logo">Shrinet82<span class="highlight-dot">.</span></a>
+            <a href="../index.html#work" class="btn-nav">Back to Work</a>
+        </div>
+    </nav>
+
+    <header class="case-hero">
+        <div class="container">
+            <a href="../index.html" class="back-link">← Back to Portfolio</a>
+            <h1 class="hero-title">AI SRE Agent</h1>
+            <p class="hero-intro">
+                Autonomous agent that monitors Kubernetes, detects issues, and fixes them using <span class="highlight-marker">Groq LLM</span>.
+            </p>
+            
+            <div class="tag-row">
+                <span class="tech-tag">Python 3.10</span>
+                <span class="tech-tag">Groq (Llama 3)</span>
+                <span class="tech-tag">Prometheus</span>
+                <span class="tech-tag">Qdrant (Vector DB)</span>
+                <span class="tech-tag">Kubernetes</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <!-- 1. CLARITY PASS: CONTEXT BLOCK -->
+        <div class="context-block">
+            <div class="context-item">
+                <h3>The Problem 🐢</h3>
+                <p>
+                    On-call engineers were wasting <strong>50+ hours/month</strong> dealing with repetitive alerts (Pod crashes, OOM kills). 
+                    Waking up at 3 AM to run `kubectl restart` leads to burnout, not innovation.
+                </p>
+            </div>
+            <div class="context-item" style="border-left: 2px dashed #ddd; padding-left: 40px;">
+                <h3>The Solution ⚡</h3>
+                <p>
+                    I built an <strong>Autonomous SRE Agent</strong> that listens to Prometheus alerts, uses RAG to find similar past incidents, 
+                    and executes fixes (restart/scale) in seconds—without human intervention.
+                </p>
+            </div>
+            <div class="hand-note" style="position: absolute; bottom: -30px; right: 20px; color: var(--accent-blue);">
+                <span class="arrow-drawn">swirly_arrow_up</span> "No more 3AM pagers!"
+            </div>
+        </div>
+
+        <!-- 2. CLARITY PASS: COMPARISON TABLE -->
+        <h2 class="section-title">Before vs. After</h2>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Manual SRE (Before)</th>
+                    <th>AI Agent (After)</th>
+                    <th>Improvement</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Response Time (MTTR)</strong></td>
+                    <td class="bad">15 - 30 Minutes</td>
+                    <td class="good">~8 Seconds</td>
+                    <td><strong>50x Faster</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Log Analysis</strong></td>
+                    <td class="bad">Manual Grep (5m)</td>
+                    <td class="good">LLM Summary (0.5s)</td>
+                    <td><strong>Instant</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Toil Hours/Month</strong></td>
+                    <td class="bad">50 Hours</td>
+                    <td class="good">20 Hours</td>
+                    <td><strong>30h Saved</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Human Intervention</strong></td>
+                    <td class="bad">Required for every alert</td>
+                    <td class="good">Only for novel issues</td>
+                    <td><strong>90% Reduction</strong></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- 3. ANATOMY (Doodle Style) -->
+        <h2 class="section-title">Event Loop</h2>
+        <div class="pipeline-doodle">
+            <div class="b-step">
+                <div class="b-circle">🚨</div>
+                <strong>Alert</strong>
+                <div style="font-size:0.8rem; color:#666;">CrashLoopBackOff</div>
+            </div>
+            <div class="b-arrow">→</div>
+            <div class="b-step">
+                <div class="b-circle">👂</div>
+                <strong>Webhook</strong>
+                <div style="font-size:0.8rem; color:#666;">Flask Receiver</div>
+            </div>
+            <div class="b-arrow">→</div>
+            <div class="b-step">
+                <div class="b-circle">🧠</div>
+                <strong>Analysis</strong>
+                <div style="font-size:0.8rem; color:#666;">RAG + Groq</div>
+            </div>
+            <div class="b-arrow">→</div>
+            <div class="b-step">
+                <div class="b-circle">🛠️</div>
+                <strong>Action</strong>
+                <div style="font-size:0.8rem; color:#666;">kubectl patch</div>
+            </div>
+        </div>
+
+        <!-- 4. MEMORY ARCHITECTURE (Schema) -->
+        <h2 class="section-title">Memory Architecture</h2>
+        <div class="hand-note">How it "learns" from past incidents...</div>
+        
+        <div class="schema-grid">
+            <!-- SQLite -->
+            <div class="db-card">
+                <div class="db-title"><span>📂 INCIDENTS (SQLite)</span> <span>Relational</span></div>
+                <div class="db-field"><span class="pk">id</span> <span class="type">INTEGER PK</span></div>
+                <div class="db-field"><span>alert_name</span> <span class="type">TEXT</span></div>
+                <div class="db-field"><span>severity</span> <span class="type">TEXT</span></div>
+                <div class="db-field"><span>logs</span> <span class="type">TEXT</span></div>
+                <div class="db-field"><span>action_taken</span> <span class="type">TEXT</span></div>
+                <div class="db-field"><span>verified</span> <span class="type">BOOLEAN</span></div>
+            </div>
+            
+            <!-- Qdrant -->
+            <div class="db-card" style="border-style: dashed;">
+                <div class="db-title"><span>🧠 VECTORS (Qdrant)</span> <span>Semantic</span></div>
+                <div class="db-field"><span class="pk">uuid</span> <span class="type">UUID PK</span></div>
+                <div class="db-field"><span>vector</span> <span class="type">FLOAT[768]</span></div>
+                <div class="db-field"><span>payload</span> <span class="type">JSON</span></div>
+                <div style="margin-top:10px; color: var(--accent-blue); font-size:0.8rem;">
+                    * Stores embeddings of logs to find similar past issues.
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. CODE (Notebook Style) -->
+        <h2 class="section-title">The Brain Logic</h2>
+        <div class="code-notebook">
+            <pre><code class="language-python">async def analyze_incident(logs):
+    # 1. RAG: Retrieve similar past incidents from Qdrant
+    history = qdrant.search(collection="incidents", vector=get_embedding(logs))
+    
+    # 2. Optimized Prompt for Llama 3
+    prompt = f"""
+    Context: {history}
+    Logs: {logs[-50:]} # Focus on last 50 lines
+    
+    Task: Identify root cause and recommend K8s action.
+    Response must be JSON with 'confidence' score.
+    """
+    
+    # 3. Fast Inference (~0.5s via Groq)
+    return await groq.chat(prompt, model="llama3-70b")</code></pre>
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <div class="container" style="text-align:center">
+            <p class="copyright">© 2026 Shashwat Pratap</p>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+</body>
+</html>
