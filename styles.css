@@ -9,6 +9,7 @@
     --accent-blue: #325FFF;
     --accent-yellow: #FFD300;
     --accent-red: #FF4D4D;
+    --accent-magenta: #D946EF;
     
     --font-heading: 'Clash Display', sans-serif;
     --font-body: 'Outfit', sans-serif;
@@ -760,4 +761,120 @@ a { text-decoration: none; color: inherit; }
         align-items: center;
     }
     .flow-arrow { transform: rotate(90deg); }
+}
+
+/* ========================================
+   Project Card Animations
+   ======================================== */
+
+/* 1. AI SRE - Brain Pulse */
+.ai-brain-pulse {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 10px;
+}
+.brain-core {
+    font-size: 2.5rem;
+    position: relative;
+    z-index: 2;
+    animation: brain-pulse 2s infinite ease-in-out;
+}
+.brain-node {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--accent-blue);
+    border-radius: 50%;
+    opacity: 0;
+}
+.brain-node.n1 { top: 0; left: 0; animation: node-float 3s infinite 0.2s; }
+.brain-node.n2 { top: 10px; right: -10px; animation: node-float 3s infinite 0.8s; }
+.brain-node.n3 { bottom: -5px; left: 20px; animation: node-float 3s infinite 1.5s; }
+
+@keyframes brain-pulse {
+    0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(59,130,246,0)); }
+    50% { transform: scale(1.1); filter: drop-shadow(0 0 10px rgba(59,130,246,0.5)); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(59,130,246,0)); }
+}
+@keyframes node-float {
+    0% { transform: translate(0, 0); opacity: 0; }
+    50% { transform: translate(10px, -10px); opacity: 1; }
+    100% { transform: translate(20px, -20px); opacity: 0; }
+}
+
+/* 2. OPSIE - Rotating Gears */
+.opsie-gears {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+}
+.gear-large {
+    font-size: 3rem;
+    position: absolute;
+    top: 0; left: 0;
+    animation: spin-cw 8s linear infinite;
+}
+.gear-small {
+    font-size: 1.8rem;
+    position: absolute;
+    bottom: 0; right: 0;
+    animation: spin-ccw 8s linear infinite;
+}
+@keyframes spin-cw { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes spin-ccw { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+
+/* 3. MLOps - Pipeline Flow */
+.mlops-pipeline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+.pipe-node {
+    width: 12px;
+    height: 12px;
+    background: var(--text-ink);
+    border-radius: 50%;
+    border: 2px solid var(--bg-paper);
+}
+.pipe-line {
+    width: 60px;
+    height: 4px;
+    background: #e5e7eb;
+    position: relative;
+    border-radius: 2px;
+    overflow: hidden;
+}
+.data-dot {
+    width: 20px;
+    height: 100%;
+    background: var(--accent-magenta);
+    position: absolute;
+    left: -20px;
+    animation: pipe-flow 2s infinite linear;
+}
+@keyframes pipe-flow {
+    0% { left: -20px; }
+    100% { left: 100%; }
+}
+
+/* 4. DevSecOps - Shield Pulse */
+.devsec-shield {
+    animation: shield-beat 3s infinite ease-in-out;
+    display: inline-block;
+}
+@keyframes shield-beat {
+    0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(16, 185, 129, 0)); }
+    10% { transform: scale(1.1); filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.4)); }
+    20% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(16, 185, 129, 0)); }
+    100% { transform: scale(1); }
+}
+
+/* Adjust card visuals */
+.ai-visual .terminal-text {
+    font-size: 0.65rem;
+    margin-top: 5px;
 }
