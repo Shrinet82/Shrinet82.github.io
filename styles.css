@@ -684,4 +684,80 @@ a { text-decoration: none; color: inherit; }
         word-break: break-all; /* Allow breaking if still too long */
         overflow-wrap: break-word;
     }
+    
+    /* ========================================
+       Case Study Mobile Fixes
+       ======================================== */
+    /* Context Block (Problem vs Solution) */
+    .context-block {
+        grid-template-columns: 1fr !important;
+        padding: 20px;
+        gap: 30px;
+    }
+    .context-item[style*="border-left"] {
+        border-left: none !important;
+        border-top: 2px dashed #ddd;
+        padding-left: 0 !important;
+        padding-top: 20px;
+    }
+
+    /* Comparison Table - Scrollable */
+    .comparison-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        background: white; /* Ensure bg covers scroll */
+    }
+    /* Add hint of scrolling */
+    .comparison-table::-webkit-scrollbar {
+        height: 6px;
+        background: #f1f1f1;
+    }
+    .comparison-table::-webkit-scrollbar-thumb {
+        background: var(--text-ink);
+        border-radius: 4px;
+    }
+
+    /* Pipeline Doodles */
+    .pipeline-doodle {
+        flex-direction: column;
+        gap: 40px;
+        align-items: center;
+        padding: 30px 10px;
+    }
+    .b-arrow { transform: rotate(90deg); margin: 0; }
+    
+    /* Memory Grid / Serving Grid / Metrics */
+    .memory-grid, .serving-grid, .metrics-grid, .metric-cards {
+        grid-template-columns: 1fr !important; /* Force single column */
+        gap: 20px;
+    }
+    
+    /* Sketch Cards / Metrics */
+    .sketch-metric, .metric-box, .sketch-card {
+        padding: 20px;
+    }
+    
+    /* Pipeline Stepper (DevSecOps) */
+    .pipeline-stepper {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 30px;
+    }
+    .pipeline-stepper::before { display: none; } /* Hide the connecting line on mobile as it breaks */
+    .step-node { width: 40%; margin-bottom: 20px; }
+    
+    /* Radar (Aegis) */
+    .radar-frame {
+        width: 280px;
+        height: 280px;
+        margin: 40px auto;
+    }
+    
+    /* Flow Doodle */
+    .flow-doodle {
+        flex-direction: column;
+        align-items: center;
+    }
+    .flow-arrow { transform: rotate(90deg); }
 }
