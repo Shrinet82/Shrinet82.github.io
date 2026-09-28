@@ -65,6 +65,7 @@ export type Glyph = 'roc' | 'trace' | 'stream' | 'drift' | 'graph' | 'pods' | 'r
 
 export type Project = {
   glyph?: Glyph
+  caption?: string
   title: string
   kind: string
   line: string
@@ -100,6 +101,7 @@ export const healSteps = [
 export const elsewhere: Project[] = [
   {
     glyph: 'roc',
+    caption: 'fig. ROC curve on held-out data, AUC 0.78',
     title: 'Credit Risk MLOps',
     kind: 'MLOps',
     line: 'Kubeflow pipelines with validation gates, KServe serving, MLflow tracking on K3s.',
@@ -111,6 +113,7 @@ export const elsewhere: Project[] = [
   },
   {
     glyph: 'trace',
+    caption: 'fig. one nutrient-dosing cycle, drawn as a trace',
     title: 'RootCause',
     kind: 'Observability',
     line: 'A hydroponic farm run like a production service. Dosing cycles are traces; plant health has SLOs.',
@@ -119,6 +122,7 @@ export const elsewhere: Project[] = [
   },
   {
     glyph: 'stream',
+    caption: 'fig. a force-push, flagged as the events stream past',
     title: 'RepoSentinel',
     kind: 'Security',
     line: 'GitHub org webhooks into Kafka, Flink SQL rules, alerts in Slack within seconds.',
@@ -126,6 +130,7 @@ export const elsewhere: Project[] = [
   },
   {
     glyph: 'drift',
+    caption: 'fig. a feature distribution drifting between datasets',
     title: 'Fraud Detection MLOps',
     kind: 'MLOps',
     line: 'DVC, MLflow and CML on GKE, with drift, fairness and data-poisoning experiments.',
@@ -133,6 +138,7 @@ export const elsewhere: Project[] = [
   },
   {
     glyph: 'graph',
+    caption: 'fig. people and organisations linked from case files',
     title: 'CaseMind',
     kind: 'Graph RAG',
     line: 'Evidence files become a 3D knowledge graph on Cognee. Built for the Cognee hackathon.',
@@ -140,6 +146,7 @@ export const elsewhere: Project[] = [
   },
   {
     glyph: 'pods',
+    caption: 'fig. 4 restarts in 5 minutes, then a rollout restart',
     title: 'AI SRE Agent v1',
     kind: 'AIOps',
     line: 'The first version: Prometheus alerts, an LLM decision, safe kubectl actions.',
@@ -150,6 +157,7 @@ export const elsewhere: Project[] = [
   },
   {
     glyph: 'rule',
+    caption: 'fig. a vendor policy that reads like a sentence',
     title: 'Vendorroll',
     kind: 'Product',
     line: 'Multi-tenant vendor risk platform with a policy engine that reads like sentences.',

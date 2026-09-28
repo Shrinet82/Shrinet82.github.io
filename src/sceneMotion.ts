@@ -20,88 +20,6 @@ function drawable(el: SVGGeometryElement) {
   return len
 }
 
-const provision: Build = (svg) => {
-  const sway = q(svg, '.person').map((p, i) =>
-    gsap.to(p, { rotate: i % 2 ? 3 : -3, transformOrigin: '50% 100%', duration: 1.4 + i * 0.3, yoyo: true, repeat: -1, ease: 'sine.inOut' }),
-  )
-  const long = gsap.to(one(svg, '.hand-long'), { rotate: 360, svgOrigin: '226 84', duration: 2, repeat: -1, ease: 'none' })
-  const short = gsap.to(one(svg, '.hand-short'), { rotate: 360, svgOrigin: '226 84', duration: 24, repeat: -1, ease: 'none' })
-
-  const fields = q<SVGGeometryElement>(svg, '.field')
-  const lens = fields.map(drawable)
-  const cursor = one(svg, '.cursor')
-  const pail = one(svg, '.pail')
-  const tag = one(svg, '.tag-8')
-  const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.8 })
-  tl.set(fields, { strokeDashoffset: (i) => lens[i] })
-    .set(pail, { y: -70, opacity: 0, x: 0 })
-    .set(tag, { opacity: 0 })
-    .fromTo(cursor, { x: 330, y: 300 }, { x: 414, y: 170, duration: 0.9, ease: 'power2.inOut' })
-    .to(one(svg, '.btn-press'), { scale: 0.82, transformOrigin: '50% 50%', duration: 0.12, yoyo: true, repeat: 1 })
-    .to(cursor, { scale: 0.9, transformOrigin: '0% 0%', duration: 0.12, yoyo: true, repeat: 1 }, '<')
-    .to(fields, { strokeDashoffset: 0, duration: 0.35, stagger: 0.2, ease: 'power1.out' })
-    .to(pail, { y: 0, opacity: 1, duration: 0.8, ease: 'bounce.out' })
-    .fromTo(tag, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.4, ease: 'back.out(2)' }, '-=0.2')
-    .to(cursor, { x: 470, y: 320, duration: 0.6, ease: 'power2.inOut' }, '<')
-    .to(pail, { x: 70, opacity: 0, duration: 0.7, ease: 'power2.in' }, '+=1.4')
-  return [...sway, long, short, tl]
-}
-
-const govern: Build = (svg) => {
-  const things = q(svg, '.thing')
-  const broom = one(svg, '.broom')
-  const alarm = one(svg, '.alarm')
-  const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.6 })
-  tl.set(broom, { x: 220, rotate: 0 })
-    .set(things, { x: 0, rotate: 0 })
-    .fromTo(
-      things,
-      { opacity: 0, scale: 0.2, y: -30, transformOrigin: '50% 100%' },
-      { opacity: 1, scale: 1, y: 0, duration: 0.4, stagger: 0.28, ease: 'back.out(2.5)' },
-    )
-    .fromTo(alarm, { opacity: 1 }, { opacity: 0.25, duration: 0.2, yoyo: true, repeat: 9 }, 0)
-    .to(broom, { x: 0, duration: 0.6, ease: 'power2.out' })
-    .to(one(svg, '.hourglass'), { rotate: 180, svgOrigin: '440 80', duration: 0.5, ease: 'power2.inOut' }, '<')
-    .to(broom, { x: -260, rotate: -10, svgOrigin: '340 262', duration: 0.8, ease: 'power2.in' })
-    .to(things, { x: -320, rotate: () => gsap.utils.random(-60, 60), opacity: 0, duration: 0.7, stagger: 0.03, ease: 'power2.in' }, '<0.15')
-    .to(broom, { opacity: 0, duration: 0.3 })
-    .set(broom, { opacity: 1, x: 220 })
-    .set(one(svg, '.hourglass'), { rotate: 0, svgOrigin: '440 80' }, '+=0.8')
-    .set(things, { opacity: 1, x: 0, rotate: 0 })
-  return [tl]
-}
-
-const heal: Build = (svg) => {
-  const logs = q<SVGGeometryElement>(svg, '.log')
-  const lens = logs.map(drawable)
-  const scroll = gsap.fromTo(logs, { strokeDashoffset: (i) => lens[i] }, { strokeDashoffset: 0, duration: 0.5, stagger: 0.25, repeat: -1, repeatDelay: 0.6, ease: 'none' })
-  const blink = gsap.to(q(svg, '.eye'), { scaleY: 0.1, transformOrigin: '50% 50%', duration: 0.08, yoyo: true, repeat: -1, repeatDelay: 2.6 })
-
-  const bubble = [one(svg, '.bubble'), one(svg, '.bubble-t'), one(svg, '.bubble-btns')]
-  const prBtn = one(svg, '.pr-btn')
-  const finger = one(svg, '.finger')
-  const card = one(svg, '.pr-card')
-  const merge = one(svg, '.merge-dot')
-  const synced = one(svg, '.synced')
-  const route = one(svg, '#pr-branch') as SVGPathElement
-  const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.8 })
-  tl.call(() => prBtn.classList.add('idle'))
-    .set([...bubble, synced], { opacity: 0 })
-    .set(merge, { scale: 1, transformOrigin: '50% 50%' })
-    .fromTo(bubble, { opacity: 0, scale: 0.7, transformOrigin: '12% 100%' }, { opacity: 1, scale: 1, duration: 0.45, ease: 'back.out(2)', stagger: 0.06 }, 0.3)
-    .fromTo(finger, { x: 470, y: 190, opacity: 0 }, { x: 323, y: 115, opacity: 1, duration: 0.9, ease: 'power2.inOut' }, '+=0.5')
-    .call(() => prBtn.classList.remove('idle'))
-    .to(finger, { scale: 0.8, transformOrigin: '50% 50%', duration: 0.1, yoyo: true, repeat: 1 })
-    .to(finger, { opacity: 0, duration: 0.3 }, '+=0.2')
-    .set(card, { opacity: 1 })
-    .to(card, { duration: 1.8, ease: 'power1.inOut', motionPath: { path: route, align: route, alignOrigin: [0.5, 0.5] } })
-    .to(card, { opacity: 0, duration: 0.2 })
-    .to(merge, { scale: 1.5, duration: 0.2, yoyo: true, repeat: 1 }, '<')
-    .fromTo(synced, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.4 })
-    .to([...bubble, synced], { opacity: 0, duration: 0.4 }, '+=1.6')
-  return [scroll, blink, tl]
-}
-
 const easel: Build = (svg) => {
   const line = one<SVGPathElement>(svg, '.paint-line')
   const len = drawable(line)
@@ -131,7 +49,7 @@ const desk: Build = (svg) => {
   return [...steam, led]
 }
 
-const builds: Record<string, Build> = { provision, govern, heal, easel, desk }
+const builds: Record<string, Build> = { easel, desk }
 
 export function scenes(root: HTMLElement) {
   const cleanups: (() => void)[] = []
@@ -149,7 +67,6 @@ export function scenes(root: HTMLElement) {
     cleanups.push(() => {
       st.kill()
       loops.forEach((l) => l.revert())
-      q(svg, '.pr-btn').forEach((el) => el.classList.remove('idle'))
     })
   })
   return () => cleanups.forEach((c) => c())

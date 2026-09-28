@@ -1,11 +1,18 @@
 import { Composition } from 'remotion'
-import { Sailing, SAILING } from './Sailing'
+import { Harbour, HARBOUR } from './Harbour'
+import { GoldenPath, GOLDEN } from './GoldenPath'
+import { Lighthouse, LIGHTHOUSE } from './Lighthouse'
+import { Loop, LOOP, LOOP_WORLD } from './Loop'
 import { Conveyor, CONVEYOR, WORLD } from './Conveyor'
 
 // Remotion Studio entry: `npm run studio` to preview and tweak the scenes.
 export const RemotionRoot: React.FC = () => (
   <>
-    <Composition id="Sailing" component={Sailing} {...SAILING} />
+    <Composition id="Harbour" component={Harbour} {...HARBOUR} />
+    <Composition id="GoldenPath" component={GoldenPath} {...GOLDEN} />
+    <Composition id="Lighthouse" component={Lighthouse} {...LIGHTHOUSE} />
+    <Composition id="Loop" component={Loop} width={1400} height={LOOP.height} fps={LOOP.fps} durationInFrames={LOOP.durationInFrames} defaultProps={{ viewWidth: 1400 }} />
+    <Composition id="LoopMobile" component={Loop} width={460} height={LOOP.height} fps={LOOP.fps} durationInFrames={LOOP.durationInFrames} defaultProps={{ viewWidth: 460 }} />
     <Composition
       id="Conveyor"
       component={Conveyor}

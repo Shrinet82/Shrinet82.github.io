@@ -3,8 +3,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
 import { useGSAP } from '@gsap/react'
 import { scenes } from './sceneMotion'
-import { players } from './remotion/players'
-import { CONVEYOR } from './remotion/Conveyor'
+import { players, SCRUBS } from './remotion/players'
 
 gsap.registerPlugin(ScrollTrigger, SplitText, useGSAP)
 
@@ -117,6 +116,7 @@ function plates(root: HTMLElement) {
   })
 
   root.querySelectorAll<HTMLElement>('.plate .scene-wrap').forEach((w) => {
+    if (!w.querySelector('svg.scene')) return
     gsap.from(w, { opacity: 0, y: 40, rotate: 1.5, duration: 1.2, ease: OUT, scrollTrigger: { trigger: w, start: 'top 88%', once: true } })
     gsap.fromTo(w.firstElementChild, { y: 30 }, { y: -30, ease: 'none', scrollTrigger: { trigger: w, start: 'top bottom', end: 'bottom top', scrub: true } })
   })
@@ -130,95 +130,34 @@ function plates(root: HTMLElement) {
   })
 }
 
-// I. The tickets get crossed out and a form is drawn; the clocks shrink.
-function provision(root: HTMLElement) {
-  const plate = root.querySelector<HTMLElement>('#provision')!
-  const sketch = plate.querySelector('.sketch')!
-  const tl = gsap.timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: sketch, start: 'top 80%', end: 'bottom 35%', scrub: 0.6 } })
-  sketch.querySelectorAll<SVGGeometryElement>('.ink-draw').forEach((s) => {
-    const len = inkable(s)
-    tl.fromTo(s, { strokeDashoffset: len }, { strokeDashoffset: 0, duration: 0.3 })
-  })
-  tl.from(sketch.querySelectorAll('.note'), { opacity: 0, duration: 0.3 }, '<')
-
-  const clocks = plate.querySelector('.clocks')!
-  const ctl = gsap.timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: clocks, start: 'top 80%', end: 'bottom 45%', scrub: 0.6 } })
-  clocks.querySelectorAll<HTMLElement>('.clock').forEach((c, i) => {
-    const before = Number(c.dataset.before)
-    const after = Number(c.dataset.after)
-    const line = c.querySelector('.stroke')!
-    const num = c.querySelector('b')!
-    const v = { m: before }
-    ctl.fromTo(line, { attr: { x2: 4 + (before / 60) * 292 } }, { attr: { x2: 4 + (after / 60) * 292 }, duration: 1 }, i * 0.2)
-    ctl.fromTo(v, { m: before }, { m: after, duration: 1, onUpdate: () => void (num.textContent = `${Math.round(v.m)} min`) }, i * 0.2)
-  })
-}
-
-// II. Scroll drives the Remotion conveyor frame by frame: the container
-// rides through the gates, gets patched, and is craned onto the ship.
-function ship(root: HTMLElement, { pin }: Opts): Cleanup {
-  const stage = root.querySelector<HTMLElement>('[data-stage="ship"]')!
-  const total = stage.querySelector('.ship-total')!
-  const wall = 32 * 60 + 52
-  const last = CONVEYOR.durationInFrames - 1
-
+// Plates I-IV are Remotion compositions whose frame is the scroll position.
+// Ship and Heal pin while they play; Provision and Govern play as they pass.
+function scrubbed(root: HTMLElement, name: keyof typeof SCRUBS, { pin }: Opts, onProgress?: (p: number) => void): Cleanup {
+  const { selector, frames, pinned, length } = SCRUBS[name]
+  const stage = root.querySelector<HTMLElement>(selector)
+  if (!stage) return
+  const last = frames - 1
   const update = (p: number) => {
-    players.conveyor?.seekTo(Math.round(p * last))
-    total.textContent = minsec(p * wall)
+    players[name]?.seekTo(Math.round(p * last))
+    onProgress?.(p)
   }
   ScrollTrigger.create(
-    pin
-      ? { trigger: stage, start: 'top 14%', end: '+=180%', pin: true, scrub: 0.6, refreshPriority: 1, onUpdate: (s) => update(s.progress) }
-      : { trigger: stage.querySelector('.conveyor'), start: 'top 80%', end: 'bottom 25%', scrub: 0.6, onUpdate: (s) => update(s.progress) },
+    pin && pinned
+      ? { trigger: stage, start: 'top 10%', end: `+=${length}%`, pin: true, scrub: 0.6, refreshPriority: 1, onUpdate: (s) => update(s.progress) }
+      : { trigger: stage, start: 'top 85%', end: 'bottom 40%', scrub: 0.6, onUpdate: (s) => update(s.progress) },
   )
   update(0)
   return () => {
-    players.conveyor?.seekTo(last)
-    total.textContent = '32m 52s'
+    players[name]?.seekTo(last)
+    onProgress?.(1)
   }
 }
 
-// III. The red band bleeds in; the two response curves draw.
-function govern(root: HTMLElement) {
-  const chart = root.querySelector<HTMLElement>('#govern .chart')!
-  const human = chart.querySelector<SVGPathElement>('.line-human')!
-  const aegis = chart.querySelector<SVGPathElement>('.line-aegis')!
-  const hl = inkable(human)
-  const al = inkable(aegis)
-  const tl = gsap.timeline({ defaults: { ease: 'none' }, scrollTrigger: { trigger: chart, start: 'top 75%', end: 'bottom 45%', scrub: 0.6 } })
-  tl.fromTo(aegis, { strokeDashoffset: al }, { strokeDashoffset: 0, duration: 0.35 }, 0)
-    .from(chart.querySelector('.n-ultra'), { opacity: 0, duration: 0.1 }, 0.15)
-    .fromTo(human, { strokeDashoffset: hl }, { strokeDashoffset: 0, duration: 1 }, 0)
-    .from(chart.querySelector('.wash-band'), { opacity: 0, scale: 0.6, transformOrigin: '75% 50%', duration: 0.5 }, 0.45)
-    .from(chart.querySelector('.n-red'), { opacity: 0, duration: 0.15 }, 0.7)
-}
-
-// IV. One brush circle draws the loop; each step lights as the brush passes.
-function heal(root: HTMLElement, { pin }: Opts): Cleanup {
-  const stage = root.querySelector<HTMLElement>('[data-stage="heal"]')!
-  const enso = stage.querySelector<SVGPathElement>('.enso-path')!
-  const dots = [...stage.querySelectorAll<SVGGElement>('.enso-dot')]
-  const steps = [...stage.querySelectorAll<HTMLElement>('.step')]
-  const list = stage.querySelector('.steps')!
-  const len = inkable(enso)
-  list.classList.add('is-live')
-
-  const set = (p: number) => {
-    gsap.set(enso, { strokeDashoffset: len * (1 - p) })
-    dots.forEach((d, i) => d.classList.toggle('on', p >= (i + 0.5) / dots.length - 0.02))
-    steps.forEach((s, i) => s.classList.toggle('active', p >= (i + 0.5) / steps.length - 0.02 || (i === 0 && p > 0.02)))
-  }
-  ScrollTrigger.create(
-    pin
-      ? { trigger: stage, start: 'top 12%', end: '+=170%', pin: true, scrub: 0.6, refreshPriority: 1, onUpdate: (s) => set(s.progress) }
-      : { trigger: stage, start: 'top 75%', end: 'bottom 60%', scrub: 0.6, onUpdate: (s) => set(s.progress) },
-  )
-  set(0)
-  return () => {
-    list.classList.remove('is-live')
-    gsap.set(enso, { clearProps: 'strokeDasharray,strokeDashoffset' })
-    dots.forEach((d) => d.classList.remove('on'))
-    steps.forEach((s) => s.classList.remove('active'))
+function shipCounter(root: HTMLElement) {
+  const total = root.querySelector('.ship-total')
+  const wall = 32 * 60 + 52
+  return (p: number) => {
+    if (total) total.textContent = minsec(p * wall)
   }
 }
 
@@ -380,10 +319,10 @@ export function setupMotion(root: HTMLElement) {
       const cleanups: Cleanup[] = []
       hero(root)
       plates(root)
-      provision(root)
-      cleanups.push(ship(root, { pin }))
-      govern(root)
-      cleanups.push(heal(root, { pin }))
+      cleanups.push(scrubbed(root, 'golden', { pin }))
+      cleanups.push(scrubbed(root, 'conveyor', { pin }, shipCounter(root)))
+      cleanups.push(scrubbed(root, 'lighthouse', { pin }))
+      cleanups.push(scrubbed(root, 'loop', { pin }))
       tagline(root)
       cleanups.push(studies(root))
       letters(root)

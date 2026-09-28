@@ -2,14 +2,13 @@ import { useRef } from 'react'
 import { useGSAP } from '@gsap/react'
 import { setupMotion } from './motion'
 import Glyph from './Glyphs'
-import { DeskScene, EaselScene, GovernScene, HealScene, ProvisionScene } from './Scenes'
-import { ConveyorPlayer, SailingPlayer } from './remotion/players'
+import { DeskScene, EaselScene } from './Scenes'
+import { ConveyorPlayer, GoldenPathPlayer, HarbourPlayer, LighthousePlayer, LoopPlayer } from './remotion/players'
 import {
   awards,
   certs,
   education,
   elsewhere,
-  healSteps,
   pipeline,
   plates,
   profile,
@@ -54,19 +53,6 @@ function Defs() {
         <feDisplacementMap in="SourceGraphic" in2="n" scale="46" result="d" />
         <feGaussianBlur in="d" stdDeviation="7" />
       </filter>
-    </svg>
-  )
-}
-
-type Pigment = 'ultra' | 'ochre' | 'vermilion' | 'sap'
-function Wash({ className = '', blobs }: { className?: string; blobs: [Pigment, number, number, number, number][] }) {
-  return (
-    <svg className={`wash ${className}`} viewBox="0 0 400 300" aria-hidden="true">
-      <g filter="url(#wash)">
-        {blobs.map(([c, cx, cy, rx, ry], i) => (
-          <ellipse key={i} className={`pig-${c}`} cx={cx} cy={cy} rx={rx} ry={ry} />
-        ))}
-      </g>
     </svg>
   )
 }
@@ -162,72 +148,24 @@ function Hero() {
           </div>
         </div>
         <figure className="hero-art">
-          <SailingPlayer />
+          <HarbourPlayer />
         </figure>
       </div>
     </section>
   )
 }
 
-const mins = (m: number) => `${m} min`
-
 function Provision() {
   return (
     <section className="plate" id="provision" data-plate="provision">
       <div className="wrap">
-        <PlateHead roman="I" label="Provision" title="Infrastructure used to be a ticket." verse={verses.provision} scene={<ProvisionScene />} />
-        <div className="two">
-          <figure className="sketch">
-            <svg viewBox="0 0 520 250" role="img" aria-label="A pile of tickets crossed out, becoming one form">
-              <g filter="url(#rough)">
-                {[
-                  [30, 60, -7],
-                  [52, 84, 3],
-                  [38, 112, -2],
-                ].map(([x, y, r], i) => (
-                  <g key={i} transform={`rotate(${r} ${x + 70} ${y + 30})`}>
-                    <rect className="ink-draw" x={x} y={y} width="140" height="62" />
-                    <line className="ink-draw thin" x1={x + 14} y1={y + 20} x2={x + 110} y2={y + 20} />
-                    <line className="ink-draw thin" x1={x + 14} y1={y + 36} x2={x + 86} y2={y + 36} />
-                  </g>
-                ))}
-                <path className="ink-draw strike" d="M24 190 L 206 58" />
-                <path className="ink-draw" d="M228 124 C 262 100, 292 100, 318 122" />
-                <path className="ink-draw" d="M308 112 L 320 124 L 304 130" />
-                <rect className="ink-draw" x="340" y="44" width="150" height="170" />
-                {[78, 110, 142].map((y) => (
-                  <line key={y} className="ink-draw thin" x1="356" y1={y} x2="474" y2={y} />
-                ))}
-                <rect className="ink-draw fill-ultra" x="356" y="166" width="70" height="26" />
-                <path className="ink-draw check" d="M442 176 l 8 9 l 18 -20" />
-              </g>
-              <text className="note" x="36" y="228">
-                ticket queue
-              </text>
-              <text className="note" x="352" y="234">
-                one Backstage form
-              </text>
-            </svg>
-          </figure>
-          <div>
-            <ul className="clocks">
-              {provision.rows.map((r) => (
-                <li className="clock" key={r.what} data-before={r.before} data-after={r.after}>
-                  <span className="clock-what">{r.what}</span>
-                  <svg className="clock-stroke" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true">
-                    <line className="ghost" x1="4" y1="7" x2={4 + (r.before / 60) * 292} y2="7" />
-                    <line className="stroke" x1="4" y1="7" x2={4 + (r.after / 60) * 292} y2="7" />
-                  </svg>
-                  <span className="clock-num">
-                    <b>{mins(r.after)}</b>
-                    <s className="mono">was {r.before}</s>
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <p className="prose">{provision.newWay}</p>
-            <Links links={repos.opsie} />
-          </div>
+        <PlateHead roman="I" label="Provision" title="Infrastructure used to be a ticket." verse={verses.provision} />
+        <div className="film">
+          <GoldenPathPlayer />
+        </div>
+        <div className="two facts">
+          <p className="prose">{provision.newWay}</p>
+          <Links links={repos.opsie} />
         </div>
       </div>
     </section>
@@ -267,57 +205,20 @@ function Govern() {
   return (
     <section className="plate" id="govern" data-plate="govern">
       <div className="wrap">
-        <PlateHead roman="III" label="Govern" title="Then a glitch started spawning buckets." verse={verses.govern} scene={<GovernScene />} />
-        <figure className="chart">
-          <div className="chart-scroll">
-            <Wash className="wash-band" blobs={[['vermilion', 200, 150, 150, 140]]} />
-            <svg className="chart-svg" viewBox="0 0 880 340" role="img" aria-labelledby="gt gd">
-              <title id="gt">Runaway resources over time</title>
-              <desc id="gd">
-                Waiting for a human, the count climbs for 4 to 24 hours. With Aegis policies it is contained in under 2
-                minutes.
-              </desc>
-              <g filter="url(#rough)">
-                <line className="axis" x1="40" x2="860" y1="300" y2="300" />
-                <path
-                  className="ink-draw line-human"
-                  d="M40 300 C 120 280, 200 250, 318 220 L 336 214 C 420 190, 500 150, 600 110 C 680 80, 760 60, 820 52 L 830 300"
-                />
-                <path className="ink-draw line-aegis" d="M40 300 C 80 288, 115 272, 136 264 L 146 300 L 860 300" />
-              </g>
-              <text className="note" x="40" y="326">
-                t = 0
-              </text>
-              <text className="note" x="128" y="326">
-                2 min
-              </text>
-              <text className="note" x="560" y="326">
-                4h
-              </text>
-              <text className="note" x="820" y="326">
-                24h
-              </text>
-              <text className="note n-ultra" x="156" y="252">
-                the policy, under 2 min
-              </text>
-              <text className="note n-red" x="600" y="40">
-                waiting to page someone: 4 to 24h
-              </text>
-            </svg>
-          </div>
-          <figcaption className="mono fig">
-            fig. 3, the curve is drawn from memory. Both response times are from the real incident.
-          </figcaption>
-        </figure>
+        <PlateHead roman="III" label="Govern" title="Then a glitch started spawning buckets." verse={verses.govern} />
+        <div className="film">
+          <LighthousePlayer />
+        </div>
         <div className="two facts">
           <p className="prose">
-            <strong className="fact">0 manual steps</strong> per incident, down from seven: alert, ack, log in, find,
-            fix, verify, close.
+            <strong className="fact">Mark, then sweep.</strong> Cloud Custodian policies run across AWS and Azure:
+            resources that break a rule are tagged, then removed, and rules like SSH open to 0.0.0.0/0 are revoked with
+            an audit trail.
           </p>
           <div>
             <p className="prose">
-              <strong className="fact">Mark, then sweep.</strong> Cloud Custodian revokes rules like SSH open to
-              0.0.0.0/0 with an audit trail, and tags orphaned volumes before deleting them.
+              <strong className="fact">0 manual steps</strong> per incident, down from seven. The runaway-resource
+              incident went from 4 to 24 hours to under 2 minutes.
             </p>
             <Links links={repos.aegis} />
           </div>
@@ -327,57 +228,21 @@ function Govern() {
   )
 }
 
-// Ensō: one brush circle for the whole loop. Step dots sit on the arc.
-const ENSO_START = -100
-const ENSO_SWEEP = 330
 function Heal() {
-  const r = 190
-  const c = 230
-  const angle = (t: number) => ((ENSO_START + ENSO_SWEEP * t) * Math.PI) / 180
-  const pt = (t: number) => [c + Math.cos(angle(t)) * r, c + Math.sin(angle(t)) * r]
-  const [sx, sy] = pt(0)
-  const [ex, ey] = pt(1)
-  const d = `M ${sx.toFixed(1)} ${sy.toFixed(1)} A ${r} ${r} 0 1 1 ${ex.toFixed(1)} ${ey.toFixed(1)}`
   return (
     <section className="plate" id="heal" data-plate="heal">
       <div className="wrap">
-        <PlateHead roman="IV" label="Heal" title="So I taught the cluster to open its own PRs." verse={verses.heal} scene={<HealScene />} />
+        <PlateHead roman="IV" label="Heal" title="So I taught the cluster to open its own PRs." verse={verses.heal} />
       </div>
-      <div className="wrap stage heal-stage" data-stage="heal">
-        <figure className="enso">
-          <svg viewBox="0 0 460 460" aria-hidden="true">
-            <g filter="url(#rough)">
-              <path className="enso-path" d={d} />
-            </g>
-            {healSteps.map((s, i) => {
-              const [x, y] = pt((i + 0.5) / healSteps.length)
-              return (
-                <g key={s.verb} className="enso-dot" data-i={i}>
-                  <circle cx={x} cy={y} r="13" />
-                  <text x={x} y={y + 4}>
-                    {i + 1}
-                  </text>
-                </g>
-              )
-            })}
-          </svg>
-          <figcaption className="enso-center">
-            <span className="enso-name">Aegis Observe</span>
-            <span className="mono">1st place · Agents of SigNoz</span>
-          </figcaption>
-        </figure>
-        <div>
-          <ol className="steps">
-            {healSteps.map((s, i) => (
-              <li key={s.verb} className="step">
-                <span className="step-num">{i + 1}</span>
-                <div>
-                  <h3>{s.verb}</h3>
-                  <p>{s.what}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+      <div className="wrap stage" data-stage="heal">
+        <div className="film film-wide">
+          <LoopPlayer />
+        </div>
+        <div className="heal-foot">
+          <p className="prose">
+            Aegis Observe: rule-based signal detection over SigNoz, an LLM that selects one remediation, a human who
+            keeps the veto in Slack, and GitOps that keeps the record. 1st place at the Agents of SigNoz hackathon.
+          </p>
           <Links links={repos.observe} />
         </div>
       </div>
@@ -424,6 +289,7 @@ function Studies() {
             <article key={p.title} className="frame" data-speed={[0.9, 1.15, 1, 1.2, 0.95, 1.1, 1.05][i % 7]}>
               <div className="frame-inner" style={{ '--tilt': `${[-1.4, 0.9, -0.6, 1.2, -1, 0.7, -0.8][i % 7]}deg` } as React.CSSProperties}>
                 <div className="mat">{p.glyph && <Glyph kind={p.glyph} />}</div>
+                {p.caption && <span className="fig-cap">{p.caption}</span>}
                 <div className="label">
                   <h3>{p.title}</h3>
                   <p className="mono medium">{p.kind}</p>
