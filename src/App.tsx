@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { useGSAP } from '@gsap/react'
 import { setupMotion } from './motion'
+import Glyph from './Glyphs'
 import {
   awards,
   certs,
@@ -326,6 +327,28 @@ function Govern() {
   )
 }
 
+// Mirrors the pinned steps: data-step goes 1..5 as the loop advances.
+function SlackCard() {
+  return (
+    <div className="slack rv" data-step="5" aria-hidden="true">
+      <div className="slack-head mono">
+        <i className="slack-mark" />
+        <b>aegis</b>
+        <span>#incidents</span>
+      </div>
+      <p className="slack-title">fraud-detection-api · 504 SLO breach</p>
+      <p className="slack-line mono s-diag">searching SigNoz logs…</p>
+      <p className="slack-line mono s-prop">proposed: patch the fraud-api manifest</p>
+      <div className="slack-btns mono">
+        <span className="sb">Approve</span>
+        <span className="sb sb-pr">PR</span>
+        <span className="sb">Reject</span>
+      </div>
+      <p className="slack-line mono s-done">PR merged · argocd synced · verified</p>
+    </div>
+  )
+}
+
 function Heal() {
   return (
     <section className="chapter" id="heal" data-chapter="heal">
@@ -343,6 +366,7 @@ function Heal() {
               }
               dek="Aegis Observe is the loop from the top of this page. Rules find the signal, an LLM picks the fix, a human keeps the veto, and Git keeps the record."
             />
+            <SlackCard />
             <p className="badge mono rv">1st place · Agents of SigNoz hackathon</p>
             <Links links={repos.observe} />
           </div>
@@ -394,7 +418,7 @@ function Elsewhere() {
               <span className="mono index-kind">{p.kind}</span>
               <h3 className="index-title">{p.title}</h3>
               <p className="index-line">{p.line}</p>
-              <span className="mono index-stat">{p.stat ?? ''}</span>
+              <div className="index-glyph">{p.glyph && <Glyph kind={p.glyph} />}</div>
               <Links links={p.links} />
             </li>
           ))}

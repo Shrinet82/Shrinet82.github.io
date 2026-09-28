@@ -829,7 +829,7 @@ main,
 
 .badge {
   display: inline-block;
-  margin: 32px 0 0;
+  margin: 20px 0 0;
   padding: 6px 10px;
   border: 1px solid var(--amber);
   border-radius: 4px;
@@ -910,7 +910,7 @@ main,
 }
 .index-row {
   display: grid;
-  grid-template-columns: 120px minmax(160px, 1fr) minmax(0, 2fr) 110px;
+  grid-template-columns: 120px minmax(160px, 1fr) minmax(0, 2fr) 168px;
   gap: 8px 32px;
   align-items: baseline;
   padding: 24px 0;
@@ -930,9 +930,199 @@ main,
   color: var(--muted);
   font-size: 16px;
 }
-.index-stat {
-  color: var(--amber);
-  text-align: right;
+.index-glyph {
+  grid-row: span 2;
+  align-self: center;
+}
+
+/* ---------- Project glyphs ---------- */
+
+.glyph {
+  display: block;
+  width: 168px;
+  height: 72px;
+  overflow: visible;
+}
+.glyph text {
+  font-family: var(--mono);
+}
+.g-frame {
+  fill: none;
+  stroke: var(--line-strong);
+}
+.g-dash {
+  stroke: var(--line-strong);
+  stroke-dasharray: 3 3;
+}
+.g-axis {
+  stroke: var(--line-strong);
+}
+.g-draw {
+  fill: none;
+  stroke-width: 2;
+}
+.g-amber {
+  stroke: var(--amber);
+  fill: var(--amber);
+}
+.g-draw.g-amber {
+  fill: none;
+}
+.g-text {
+  fill: var(--muted);
+  font-size: 11px;
+}
+.g-num {
+  font-size: 20px;
+  stroke: none;
+}
+.g-ok {
+  fill: var(--ok);
+}
+.g-err {
+  fill: var(--err);
+}
+.g-span {
+  rx: 1.5;
+}
+.g-root {
+  fill: var(--line-strong);
+}
+.g-bar {
+  fill: var(--amber);
+}
+.g-evt {
+  fill: var(--muted);
+}
+.g-hot {
+  fill: var(--err);
+}
+.g-alert {
+  fill: rgba(255, 107, 94, 0.1);
+  stroke: var(--err);
+}
+.g-hist-base {
+  fill: var(--line-strong);
+}
+.g-amber-fill {
+  fill: var(--amber);
+  opacity: 0.85;
+}
+.g-edge {
+  stroke: var(--faint);
+  stroke-width: 1;
+}
+.g-node {
+  fill: var(--text);
+}
+.g-node-hub {
+  fill: var(--amber);
+}
+.g-pod {
+  fill: rgba(61, 214, 140, 0.14);
+  stroke: var(--ok);
+}
+.g-pod.sick {
+  fill: rgba(255, 107, 94, 0.16);
+  stroke: var(--err);
+}
+.g-count {
+  fill: var(--text);
+}
+.g-kw {
+  fill: var(--faint);
+}
+.g-type.g-amber {
+  stroke: none;
+}
+
+/* ---------- Heal: Slack card ---------- */
+
+.slack {
+  margin-top: 32px;
+  max-width: 420px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--amber);
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+.slack-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--faint);
+  font-size: 12px;
+}
+.slack-head b {
+  color: var(--text);
+  font-weight: 500;
+}
+.slack-mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--amber);
+}
+.slack-title {
+  margin: 8px 0 6px;
+  color: var(--err);
+  font-weight: 500;
+}
+.slack-line {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.slack-btns {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.sb {
+  padding: 4px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text);
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    border-color 200ms ease,
+    transform 160ms var(--ease-out);
+}
+.s-done {
+  color: var(--ok);
+  margin-bottom: 0;
+}
+/* Each step reveals the next part of the conversation. */
+.slack[data-step='1'] .s-prop,
+.slack[data-step='1'] .slack-btns,
+.slack[data-step='1'] .s-done,
+.slack[data-step='2'] .slack-btns,
+.slack[data-step='2'] .s-done,
+.slack[data-step='3'] .s-done,
+.slack[data-step='4'] .s-done {
+  display: none;
+}
+.slack:not([data-step='1']) .s-diag {
+  display: none;
+}
+.slack[data-step='4'] .sb-pr,
+.slack[data-step='5'] .sb-pr {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: var(--bg);
+}
+.slack[data-step='4'] .sb-pr {
+  transform: scale(0.95);
+}
+.slack[data-step='5'] {
+  border-left-color: var(--ok);
+}
+.slack[data-step='5'] .slack-title {
+  color: var(--text);
 }
 .index-row .links {
   grid-column: 2 / -1;
@@ -1084,14 +1274,17 @@ main,
     grid-column: 1 / -1;
   }
   .index-row {
-    grid-template-columns: 110px 1fr auto;
+    grid-template-columns: 110px 1fr 168px;
   }
   .index-line {
-    grid-column: 2 / -1;
+    grid-column: 2 / 3;
   }
-  .index-stat {
-    grid-row: 1;
+  .index-glyph {
+    grid-row: 1 / span 3;
     grid-column: 3;
+  }
+  .index-row .links {
+    grid-column: 2 / 3;
   }
 }
 
@@ -1151,19 +1344,18 @@ main,
     font-size: 12px;
   }
   .index-row {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr;
   }
-  .index-kind {
-    grid-column: 1;
-  }
+  .index-kind,
   .index-title,
   .index-line,
-  .index-row .links {
-    grid-column: 1 / -1;
+  .index-row .links,
+  .index-glyph {
+    grid-column: 1;
+    grid-row: auto;
   }
-  .index-stat {
-    grid-row: 1;
-    grid-column: 2;
+  .index-glyph {
+    margin-top: 8px;
   }
   .proof-grid {
     grid-template-columns: 1fr;

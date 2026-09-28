@@ -61,7 +61,10 @@ export const pipeline = {
   ],
 }
 
+export type Glyph = 'roc' | 'trace' | 'stream' | 'drift' | 'graph' | 'pods' | 'rule'
+
 export type Project = {
+  glyph?: Glyph
   title: string
   kind: string
   line: string
@@ -96,6 +99,7 @@ export const healSteps = [
 
 export const elsewhere: Project[] = [
   {
+    glyph: 'roc',
     title: 'Credit Risk MLOps',
     kind: 'MLOps',
     line: 'Kubeflow pipelines with validation gates, KServe serving, MLflow tracking on K3s.',
@@ -106,6 +110,7 @@ export const elsewhere: Project[] = [
     ],
   },
   {
+    glyph: 'trace',
     title: 'RootCause',
     kind: 'Observability',
     line: 'A hydroponic farm run like a production service. Dosing cycles are traces; plant health has SLOs.',
@@ -113,24 +118,28 @@ export const elsewhere: Project[] = [
     links: [{ label: 'Repo', href: `${GH}/rootcause-hydro` }],
   },
   {
+    glyph: 'stream',
     title: 'RepoSentinel',
     kind: 'Security',
     line: 'GitHub org webhooks into Kafka, Flink SQL rules, alerts in Slack within seconds.',
     links: [{ label: 'Repo', href: `${GH}/reposentinel` }],
   },
   {
+    glyph: 'drift',
     title: 'Fraud Detection MLOps',
     kind: 'MLOps',
     line: 'DVC, MLflow and CML on GKE, with drift, fairness and data-poisoning experiments.',
     links: [{ label: 'Repo', href: `${GH}/MLOPS-Full-Data-Pipeline` }],
   },
   {
+    glyph: 'graph',
     title: 'CaseMind',
     kind: 'Graph RAG',
     line: 'Evidence files become a 3D knowledge graph on Cognee. Built for the Cognee hackathon.',
     links: [{ label: 'Repo', href: `${GH}/CaseMind` }],
   },
   {
+    glyph: 'pods',
     title: 'AI SRE Agent v1',
     kind: 'AIOps',
     line: 'The first version: Prometheus alerts, an LLM decision, safe kubectl actions.',
@@ -140,6 +149,7 @@ export const elsewhere: Project[] = [
     ],
   },
   {
+    glyph: 'rule',
     title: 'Vendorroll',
     kind: 'Product',
     line: 'Multi-tenant vendor risk platform with a policy engine that reads like sentences.',

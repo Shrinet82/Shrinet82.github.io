@@ -225,10 +225,12 @@ function heal(root: HTMLElement, { pin }: Scroll) {
     return
   }
   list.classList.add('is-live')
+  const card = section.querySelector<HTMLElement>('.slack')
   const set = (p: number) => {
     const idx = Math.min(steps.length - 1, Math.floor(p * steps.length))
     steps.forEach((s, i) => s.classList.toggle('active', i <= idx))
     list.style.setProperty('--p', String(p))
+    if (card) card.dataset.step = String(idx + 1)
   }
   ScrollTrigger.create({
     trigger: section,
@@ -244,7 +246,105 @@ function heal(root: HTMLElement, { pin }: Scroll) {
   return () => {
     list.classList.remove('is-live')
     steps.forEach((s) => s.classList.remove('active'))
+    if (card) card.dataset.step = '5'
   }
+}
+
+// One small timeline per project diagram. The SVGs are drawn finished, so
+// every timeline animates *from* an earlier state and ends where it started.
+function glyphTimeline(svg: SVGSVGElement) {
+  const tl = gsap.timeline({ paused: true, defaults: { ease: OUT } })
+  const q = <T extends Element>(sel: string) => [...svg.querySelectorAll<T>(sel)]
+  const drawFrom = (el: SVGGeometryElement) => {
+    const len = el.getTotalLength()
+    return { strokeDasharray: len, strokeDashoffset: len }
+  }
+  const restore: (() => void)[] = []
+
+  switch (svg.dataset.glyph) {
+    case 'roc': {
+      const curve = q<SVGPathElement>('.g-draw')[0]
+      const num = q<SVGTextElement>('.g-num')[0]
+      const v = { n: 0 }
+      tl.fromTo(curve, drawFrom(curve), { strokeDashoffset: 0, duration: 1.2, ease: 'power2.inOut' })
+      tl.fromTo(v, { n: 0.5 }, { n: 0.78, duration: 1.2, ease: 'power2.inOut', onUpdate: () => void (num.textContent = v.n.toFixed(2)) }, 0)
+      restore.push(() => (num.textContent = '0.78'))
+      break
+    }
+    case 'trace':
+      tl.from(q('.g-root'), { scaleX: 0, transformOrigin: '0% 50%', duration: 0.5, ease: 'none' })
+      tl.from(q('.g-bar'), { scaleX: 0, transformOrigin: '0% 50%', duration: 0.35, ease: 'power1.out', stagger: 0.32 }, 0.05)
+      break
+    case 'stream':
+      tl.from(q('.g-evt'), { x: -30, opacity: 0, duration: 0.5, stagger: 0.12 })
+      tl.to(q('.g-hot'), { attr: { r: 6 }, duration: 0.15, yoyo: true, repeat: 1, ease: 'power1.inOut' })
+      tl.from(q('.g-alert, .g-alert-t'), { y: -8, opacity: 0, duration: 0.4 }, '>-0.05')
+      break
+    case 'drift':
+      tl.from(q('.g-hist'), { scaleY: 0, transformOrigin: '50% 100%', duration: 0.5, stagger: 0.06 })
+      tl.from(q('.g-hist'), { x: -9, duration: 0.8, ease: 'power2.inOut' }, 0.2)
+      break
+    case 'graph':
+      tl.from(q('.g-node'), { scale: 0.4, opacity: 0, transformOrigin: '50% 50%', duration: 0.4, stagger: 0.07 })
+      q<SVGLineElement>('.g-edge').forEach((e, i) =>
+        tl.fromTo(e, drawFrom(e), { strokeDashoffset: 0, duration: 0.3, ease: 'power1.out' }, 0.25 + i * 0.09),
+      )
+      break
+    case 'pods': {
+      const sick = q<SVGRectElement>('.g-pod-sick')[0]
+      const count = q<SVGTSpanElement>('.g-count')[0]
+      const v = { n: 0 }
+      tl.call(() => sick.classList.add('sick'))
+      tl.set(q('.g-fix'), { opacity: 0 })
+      tl.fromTo(v, { n: 0 }, { n: 4, duration: 1.2, ease: 'steps(4)', onUpdate: () => void (count.textContent = String(Math.round(v.n))) })
+      tl.to(sick, { opacity: 0.3, duration: 0.15, yoyo: true, repeat: 3 }, '<')
+      tl.call(() => sick.classList.remove('sick'))
+      tl.to(q('.g-fix'), { opacity: 1, duration: 0.4 })
+      restore.push(() => {
+        sick.classList.remove('sick')
+        count.textContent = '4'
+      })
+      break
+    }
+    case 'rule': {
+      q<SVGTextElement>('.g-type').forEach((t, i) => {
+        const full = t.dataset.full ?? ''
+        const v = { n: 0 }
+        tl.fromTo(
+          v,
+          { n: 0 },
+          { n: full.length, duration: full.length * 0.045, ease: 'none', onUpdate: () => void (t.textContent = full.slice(0, Math.round(v.n))) },
+          i === 0 ? 0 : '+=0.25',
+        )
+        restore.push(() => (t.textContent = full))
+      })
+      tl.from(q('.g-kw'), { opacity: 0, duration: 0.3, stagger: 0.5 }, 0)
+      break
+    }
+  }
+  return { tl, restore: () => restore.forEach((r) => r()) }
+}
+
+function glyphs(root: HTMLElement) {
+  const hover = window.matchMedia('(hover: hover)').matches
+  const cleanups: (() => void)[] = []
+  root.querySelectorAll<HTMLElement>('.index-row').forEach((row) => {
+    const svg = row.querySelector<SVGSVGElement>('.glyph')
+    if (!svg) return
+    const { tl, restore } = glyphTimeline(svg)
+    tl.progress(0).pause()
+    ScrollTrigger.create({ trigger: row, start: 'top 85%', once: true, onEnter: () => void tl.play(0) })
+    const replay = () => {
+      if (!tl.isActive()) tl.play(0)
+    }
+    if (hover) row.addEventListener('mouseenter', replay)
+    cleanups.push(() => {
+      row.removeEventListener('mouseenter', replay)
+      tl.progress(1).kill()
+      restore()
+    })
+  })
+  return () => cleanups.forEach((c) => c())
 }
 
 function tagline(root: HTMLElement) {
@@ -282,6 +382,7 @@ export function setupMotion(root: HTMLElement) {
       govern(root)
       cleanups.push(heal(root, { pin }))
       tagline(root)
+      cleanups.push(glyphs(root))
       return () => cleanups.forEach((c) => c && c())
     },
   )
