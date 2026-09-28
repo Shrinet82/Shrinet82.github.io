@@ -1,258 +1,202 @@
-// Every claim on the site comes from the resume or the project READMEs.
-// Keep numbers here in sync with those sources.
+// Every fact here comes from the resume or a project README. Numbers are
+// measured values from those sources; nothing is rounded up or invented.
 
 const GH = 'https://github.com/Shrinet82'
 
 export const profile = {
   name: 'Shashwat Pratap Singh',
-  handle: 'Shrinet82',
-  role: 'Independent DevOps & Platform Engineer',
+  short: 'Shashwat',
+  role: 'DevOps & Platform Engineer',
   location: 'Gorakhpur, India',
   email: 'shashwat.pratap94550@gmail.com',
   github: GH,
   linkedin: 'https://www.linkedin.com/in/shashwat-pratap-singh-a2b984230',
-  availability: 'Open to contract work & full-time Platform / SRE / DevOps roles',
+  availability: 'Open to contract work and full-time Platform, SRE or DevOps roles',
 }
 
-export const stats = [
-  { value: '4', unit: 'teams', label: 'running on platforms I built' },
-  { value: '82%', unit: 'faster', label: 'S3 provisioning, 45m → 8m' },
-  { value: '<2', unit: 'min', label: 'runaway-resource remediation, down from 4–24h' },
-  { value: '1st', unit: 'place', label: 'Agents of SigNoz hackathon' },
+export const chapters = [
+  { id: 'top', num: '00', label: 'Incident' },
+  { id: 'provision', num: '01', label: 'Provision' },
+  { id: 'ship', num: '02', label: 'Ship' },
+  { id: 'govern', num: '03', label: 'Govern' },
+  { id: 'heal', num: '04', label: 'Heal' },
+  { id: 'elsewhere', num: '05', label: 'Elsewhere' },
+  { id: 'proof', num: '06', label: 'Proof' },
+  { id: 'contact', num: '07', label: 'Pager' },
 ]
 
-export const experience = {
-  title: 'Independent DevOps Consultant',
-  org: 'SaaS startups & internal tooling teams · Remote',
-  period: 'Jan 2025 — Present',
-  groups: [
-    {
-      heading: 'Platform',
-      points: [
-        'Architected an Internal Developer Platform on Backstage + Terraform, giving 4 engineering teams self-service infrastructure.',
-        'Golden-path templates cut S3 provisioning 82% (45m → 8m) and VPC setup 80% (60m → 12m).',
-        'Replaced manual deploy scripts with ArgoCD GitOps: audit-friendly pipelines and safer rollbacks.',
-      ],
-    },
-    {
-      heading: 'Governance',
-      points: [
-        'Built Aegis, a Cloud Custodian governance engine enforcing tagging, cost controls and policy guardrails.',
-        'Contained a runaway-resource incident (a platform glitch spawning S3 buckets and EC2 instances): remediation went from 4–24 hours to under 2 minutes.',
-      ],
-    },
-    {
-      heading: 'Security & reliability',
-      points: [
-        'Added secrets, IaC and container scanning to CI/CD to block high-risk releases before deploy.',
-        'Stood up Prometheus + Grafana + Loki with dashboards and alerting for faster incident response.',
-      ],
-    },
+// The Aegis Observe demo loop, step by step. Relative timestamps; the
+// workload, signatures and Slack actions are the ones in the project README.
+export type LogLine = { t: string; src: string; msg: string; tone?: 'err' | 'ok' | 'amber' | 'dim' }
+export const incident: LogLine[] = [
+  { t: '+00s', src: 'alert', msg: 'fraud-detection-api · 504 SLO breach', tone: 'err' },
+  { t: '+01s', src: 'signoz', msg: 'mcp: signoz_search_logs "504" in oppe2-app', tone: 'dim' },
+  { t: '+03s', src: 'agent', msg: 'rule matched. asking the LLM to pick one tool' },
+  { t: '+04s', src: 'agent', msg: 'proposal: patch the fraud-api manifest. confidence gate passed', tone: 'amber' },
+  { t: '+04s', src: 'slack', msg: '#incidents  [ Approve ]  [ PR ]  [ Reject ]' },
+  { t: '+31s', src: 'human', msg: 'clicked PR', tone: 'dim' },
+  { t: '+33s', src: 'git', msg: 'pull request opened with the LLM reasoning attached' },
+  { t: '+38s', src: 'argocd', msg: 'merged. flagship-gitops synced', tone: 'ok' },
+  { t: '+40s', src: 'agent', msg: 'verified. span exported with token cost', tone: 'ok' },
+]
+
+export const provision = {
+  rows: [
+    { what: 'S3 bucket', before: 45, after: 8 },
+    { what: 'VPC + subnets', before: 60, after: 12 },
+    { what: 'App on Kubernetes', before: 30, after: 10 },
+  ],
+  oldWay: ['write Terraform', 'open a ticket', 'wait for review', 'plan', 'apply', 'register it somewhere'],
+  newWay: 'Fill one Backstage form. Terraform runs through GitHub Actions with OIDC keyless auth, Infracost gates the cost, and the resource lands in the catalog by itself.',
+}
+
+export const pipeline = {
+  total: '32m 52s',
+  stages: [
+    { name: 'Security gates', tools: 'Gitleaks · Checkov', time: '4m 26s', secs: 266 },
+    { name: 'App quality', tools: 'backend + frontend checks', time: '3m 09s', secs: 189 },
+    { name: 'Build factory', tools: 'Docker · Trivy · SBOM', time: '10m 23s', secs: 623, flag: true },
+    { name: 'Delivery', tools: 'AKS rollout', time: '2m 12s', secs: 132 },
+    { name: 'Verification', tools: 'smoke test · OWASP ZAP', time: '6m 39s', secs: 399 },
   ],
 }
 
 export type Project = {
-  id: string
-  kicker: string
   title: string
-  blurb: string
-  metrics: { value: string; label: string }[]
-  stack: string[]
+  kind: string
+  line: string
+  stat?: string
   links: { label: string; href: string }[]
-  badge?: string
-  hue: string
 }
 
-export const projects: Project[] = [
-  {
-    id: 'aegis-observe',
-    kicker: 'AI SRE · Observability',
-    title: 'Aegis Observe',
-    badge: '1st Place · Agents of SigNoz',
-    blurb:
-      'An SRE copilot that detects incidents from SigNoz / OpenTelemetry signals, lets an LLM pick the remediation behind confidence and Slack human-in-the-loop gates, then commits the fix through tiered GitOps: direct push or pull request.',
-    metrics: [
-      { value: '5/5', label: 'SigNoz pillars: traces, metrics, logs, dashboards, alerts' },
-      { value: 'OTel', label: 'self-traced, incl. LLM token-cost spans' },
-    ],
-    stack: ['Kubernetes', 'SigNoz', 'OpenTelemetry', 'ArgoCD', 'Qdrant', 'Slack', 'Python'],
-    links: [{ label: 'Repository', href: `${GH}/Aegis-Observe-SRE-agent` }],
-    hue: '#8b5cf6',
-  },
-  {
-    id: 'opsie',
-    kicker: 'Internal Developer Platform',
-    title: 'OPSIE',
-    blurb:
-      'Self-service golden paths for multi-cloud provisioning (AWS + Azure): parameterised Terraform with OIDC keyless auth and Infracost cost-gating. Every provision auto-registers in the Backstage catalog.',
-    metrics: [
-      { value: '45→8m', label: 'S3 bucket provisioning' },
-      { value: '60→12m', label: 'VPC + subnets' },
-    ],
-    stack: ['Backstage', 'Terraform', 'ArgoCD', 'GitHub Actions OIDC', 'AWS', 'Azure'],
-    links: [
-      { label: 'Case study', href: '/case-studies/opsie.html' },
-      { label: 'Portal', href: `${GH}/Opsie-IDP-BackStage` },
-      { label: 'Infra', href: `${GH}/Opsie-backstage-infra` },
-    ],
-    hue: '#22d3ee',
-  },
-  {
-    id: 'aegis',
-    kicker: 'Policy-as-Code Governance',
-    title: 'Project Aegis',
-    blurb:
-      'A cloud immune system for AWS & Azure. Cloud Custodian policies find orphaned "zombie" resources and insecure rules, then mark, sweep and revoke them automatically, with an audit trail.',
-    metrics: [
-      { value: '<2 min', label: 'detect → remediate, from 4–24h' },
-      { value: '0', label: 'manual steps per incident' },
-    ],
-    stack: ['Cloud Custodian', 'AWS', 'Azure', 'Python', 'OIDC'],
-    links: [
-      { label: 'Case study', href: '/case-studies/aegis.html' },
-      { label: 'Repository', href: `${GH}/Aegis-Governance-PaC` },
-    ],
-    hue: '#f97316',
-  },
-  {
-    id: 'devsecops',
-    kicker: 'DevSecOps · Azure',
-    title: 'Zero-Trust DevSecOps',
-    blurb:
-      'A 5-stage Azure DevOps pipeline: secrets scan, IaC scan, container scan, SBOM and DAST, with severity-gated releases to AKS and runtime secrets from Key Vault CSI.',
-    metrics: [
-      { value: '32m 52s', label: 'commit → verified deploy' },
-      { value: '2', label: 'critical CVEs found & fixed' },
-    ],
-    stack: ['AKS', 'ACR', 'Azure Pipelines', 'Trivy', 'Checkov', 'Gitleaks', 'OWASP ZAP'],
-    links: [
-      { label: 'Case study', href: '/case-studies/devsecops.html' },
-      { label: 'Repository', href: `${GH}/zero-trust-devsecops` },
-    ],
-    hue: '#10b981',
-  },
-  {
-    id: 'mlops',
-    kicker: 'MLOps · Kubernetes',
-    title: 'Credit Risk MLOps',
-    blurb:
-      'Train, validate, serve and monitor credit-default models on K3s. Kubeflow Pipelines with validation gates, KServe inference with autoscaling, and MLflow experiment tracking.',
-    metrics: [
-      { value: '0.78', label: 'AUC-ROC on held-out set' },
-      { value: '~5 min', label: 'automated model deploy' },
-    ],
-    stack: ['K3s', 'Kubeflow', 'KServe', 'MLflow', 'MinIO', 'Prometheus', 'Grafana'],
-    links: [
-      { label: 'Case study', href: '/case-studies/mlops.html' },
-      { label: 'Repository', href: `${GH}/ML-OPS` },
-    ],
-    hue: '#eab308',
-  },
-  {
-    id: 'rootcause',
-    kicker: 'Observability · Digital Twin',
-    title: 'RootCause',
-    blurb:
-      'A physics-based digital twin of a hydroponic farm, run like a production service. Dosing cycles become distributed traces, and plant health gets SLOs, error budgets and predictive alerts.',
-    metrics: [
-      { value: '3', label: 'alert types: threshold, anomaly, predictive' },
-      { value: 'as code', label: 'dashboards & alerts on SigNoz' },
-    ],
-    stack: ['Python', 'OpenTelemetry', 'SigNoz', 'FastAPI', 'Docker'],
-    links: [{ label: 'Repository', href: `${GH}/rootcause-hydro` }],
-    hue: '#34d399',
-  },
+export const repos = {
+  opsie: [
+    { label: 'Case study', href: '/case-studies/opsie.html' },
+    { label: 'Portal repo', href: `${GH}/Opsie-IDP-BackStage` },
+    { label: 'Infra repo', href: `${GH}/Opsie-backstage-infra` },
+  ],
+  devsecops: [
+    { label: 'Case study', href: '/case-studies/devsecops.html' },
+    { label: 'Repo', href: `${GH}/zero-trust-devsecops` },
+  ],
+  aegis: [
+    { label: 'Case study', href: '/case-studies/aegis.html' },
+    { label: 'Repo', href: `${GH}/Aegis-Governance-PaC` },
+  ],
+  observe: [{ label: 'Repo', href: `${GH}/Aegis-Observe-SRE-agent` }],
+}
+
+export const healSteps = [
+  { verb: 'Detect', what: 'SigNoz MCP searches logs and traces for known signatures: OOMKilled, 504, drift detected.' },
+  { verb: 'Decide', what: 'An LLM picks exactly one remediation tool. Low confidence stops here.' },
+  { verb: 'Ask', what: 'A Slack card offers Approve, PR or Reject. A lock holds the incident while it waits.' },
+  { verb: 'Fix', what: 'Tier 1 pushes straight to main. Tier 2 opens a pull request with the reasoning.' },
+  { verb: 'Verify', what: 'ArgoCD syncs. The agent traces itself in OpenTelemetry, token cost included.' },
 ]
 
-export const moreBuilds = [
+export const elsewhere: Project[] = [
   {
-    title: 'RepoSentinel',
-    blurb: 'Real-time GitHub security monitor: org webhooks → Kafka → Flink SQL rules → Slack/Discord.',
-    href: `${GH}/reposentinel`,
+    title: 'Credit Risk MLOps',
+    kind: 'MLOps',
+    line: 'Kubeflow pipelines with validation gates, KServe serving, MLflow tracking on K3s.',
+    stat: 'AUC 0.78',
+    links: [
+      { label: 'Case study', href: '/case-studies/mlops.html' },
+      { label: 'Repo', href: `${GH}/ML-OPS` },
+    ],
   },
   {
-    title: 'CaseMind',
-    blurb: 'Graph-RAG investigative memory on Cognee: evidence to a 3D knowledge graph. Cognee hackathon.',
-    href: `${GH}/CaseMind`,
+    title: 'RootCause',
+    kind: 'Observability',
+    line: 'A hydroponic farm run like a production service. Dosing cycles are traces; plant health has SLOs.',
+    stat: '3 alert types',
+    links: [{ label: 'Repo', href: `${GH}/rootcause-hydro` }],
+  },
+  {
+    title: 'RepoSentinel',
+    kind: 'Security',
+    line: 'GitHub org webhooks into Kafka, Flink SQL rules, alerts in Slack within seconds.',
+    links: [{ label: 'Repo', href: `${GH}/reposentinel` }],
   },
   {
     title: 'Fraud Detection MLOps',
-    blurb: 'DVC + MLflow + CML on GKE, with drift (Evidently), fairness (Fairlearn/SHAP) and poisoning tests.',
-    href: `${GH}/MLOPS-Full-Data-Pipeline`,
+    kind: 'MLOps',
+    line: 'DVC, MLflow and CML on GKE, with drift, fairness and data-poisoning experiments.',
+    links: [{ label: 'Repo', href: `${GH}/MLOPS-Full-Data-Pipeline` }],
   },
   {
-    title: 'AI SRE Agent (v1)',
-    blurb: 'The first Kubernetes self-healing agent: Prometheus alerts → LLM decision → safe kubectl actions.',
-    href: `${GH}/ai-sre-agent`,
+    title: 'CaseMind',
+    kind: 'Graph RAG',
+    line: 'Evidence files become a 3D knowledge graph on Cognee. Built for the Cognee hackathon.',
+    links: [{ label: 'Repo', href: `${GH}/CaseMind` }],
+  },
+  {
+    title: 'AI SRE Agent v1',
+    kind: 'AIOps',
+    line: 'The first version: Prometheus alerts, an LLM decision, safe kubectl actions.',
+    links: [
+      { label: 'Case study', href: '/case-studies/ai-sre.html' },
+      { label: 'Repo', href: `${GH}/ai-sre-agent` },
+    ],
   },
   {
     title: 'Vendorroll',
-    blurb: 'Multi-tenant vendor risk & compliance platform with a sentence-style policy engine.',
-    href: 'https://vendorroll.vercel.app',
-  },
-  {
-    title: 'AudiencePulse',
-    blurb: 'AI creator-vetting SaaS: trust scores and audience DNA from YouTube comment analysis.',
-    href: `${GH}/audiencepulse`,
+    kind: 'Product',
+    line: 'Multi-tenant vendor risk platform with a policy engine that reads like sentences.',
+    links: [{ label: 'Live', href: 'https://vendorroll.vercel.app' }],
   },
 ]
 
-export const openSource = [
+export const upstream = [
   {
-    project: 'Cognee',
-    what: 'AI memory engine',
-    detail:
-      'Landed a native Langfuse ↔ OpenTelemetry integration: a config surface plus a span processor mapping Cognee spans to OTel GenAI semantic conventions. Merged to main.',
+    where: 'Cognee',
+    what: 'Native Langfuse and OpenTelemetry integration, with a span processor that maps Cognee spans to OTel GenAI conventions.',
+    state: 'merged to main',
     href: 'https://github.com/topoteretes/cognee/commits?author=Shrinet82',
   },
   {
-    project: 'LikeC4',
-    what: 'Architecture-as-code',
-    detail: 'Merged PR #2576: test coverage for the $exclude predicate in deployment views.',
+    where: 'LikeC4',
+    what: 'Test coverage for the $exclude predicate in deployment views.',
+    state: 'PR #2576 merged',
     href: 'https://github.com/likec4/likec4/pull/2576',
+  },
+  {
+    where: 'IEEE IoT-SIU 2025',
+    what: 'ResCNN intrusion detection for IoT and WSN networks on N-BaIoT. 87.49% accuracy.',
+    state: 'published',
+    href: 'https://ieeexplore.ieee.org/document/11402860',
   },
 ]
 
-export const recognition = [
-  { title: 'Agents of SigNoz Hackathon', note: '1st Place: Aegis Observe' },
-  { title: 'Hangover Part 1 Hackathon', note: 'PR Track winner (top 20)' },
-  { title: 'Smart India Hackathon', note: 'Finalist' },
-  { title: 'Patent (co-filed)', note: 'Assistive technology, with the university robotics dept.' },
-  { title: "Vice-Chancellor's Award", note: 'Academic & extracurricular performance' },
+export const awards = [
+  { what: 'Agents of SigNoz Hackathon', note: '1st place, Aegis Observe' },
+  { what: 'Hangover Part 1 Hackathon', note: 'PR track, top 20' },
+  { what: 'Smart India Hackathon', note: 'Finalist' },
+  { what: 'Patent, co-filed', note: 'Assistive technology' },
+  { what: "Vice-Chancellor's Award", note: 'Chandigarh University' },
 ]
 
-export const publication = {
-  title: 'Design for Automated Reporting and Intervention for High-Risk Irregularities in WSN Environment',
-  venue: 'IEEE IoT-SIU 2025 · Dehradun',
-  detail: 'ResCNN intrusion detection for IoT/WSN networks on N-BaIoT (Mirai, Gafgyt): 87.49% accuracy.',
-  href: 'https://ieeexplore.ieee.org/document/11402860',
-}
+export const certs = [
+  'OCI DevOps Professional',
+  'OCI Architect Associate',
+  'OCI Generative AI Professional',
+  'Oracle AI Vector Search Professional',
+  'Linux Foundation LFS162',
+  'Canonical Ubuntu Linux Professional',
+  'Google Cloud Foundations',
+  'Docker Foundations',
+  'PagerDuty DevOps',
+]
 
 export const stack = [
-  { group: 'Cloud', items: ['OCI', 'GCP · GKE', 'Azure · AKS', 'AWS'] },
-  { group: 'Platform', items: ['Kubernetes', 'Docker', 'Helm', 'ArgoCD', 'Backstage', 'GitOps'] },
-  { group: 'CI/CD', items: ['GitHub Actions', 'GitLab CI', 'Azure Pipelines', 'Jenkins'] },
-  { group: 'IaC & Policy', items: ['Terraform', 'Cloud Custodian', 'OPA Gatekeeper'] },
-  { group: 'Observability', items: ['OpenTelemetry', 'SigNoz', 'Prometheus', 'Grafana', 'Loki', 'Alertmanager'] },
-  { group: 'Security', items: ['Trivy', 'Checkov', 'Gitleaks', 'OWASP ZAP'] },
-  { group: 'MLOps', items: ['Kubeflow', 'KServe', 'MLflow', 'DVC'] },
-  { group: 'Code', items: ['Python', 'Bash'] },
+  ['Cloud', 'OCI, GKE, AKS, AWS'],
+  ['Platform', 'Kubernetes, Helm, ArgoCD, Backstage'],
+  ['IaC', 'Terraform, Cloud Custodian, OPA Gatekeeper'],
+  ['CI/CD', 'GitHub Actions, GitLab CI, Azure Pipelines, Jenkins'],
+  ['Signals', 'OpenTelemetry, SigNoz, Prometheus, Grafana, Loki'],
+  ['Security', 'Trivy, Checkov, Gitleaks, OWASP ZAP'],
+  ['MLOps', 'Kubeflow, KServe, MLflow, DVC'],
+  ['Code', 'Python, Bash'],
 ]
 
-export const certifications = [
-  { name: 'OCI DevOps Professional', by: 'Oracle', year: '2025' },
-  { name: 'OCI Architect Associate', by: 'Oracle', year: '2025' },
-  { name: 'OCI Generative AI Professional', by: 'Oracle', year: '2025' },
-  { name: 'Oracle AI Vector Search Professional', by: 'Oracle', year: '2025' },
-  { name: 'LFS162 · DevOps & SRE', by: 'Linux Foundation' },
-  { name: 'Ubuntu Linux Professional', by: 'Canonical' },
-  { name: 'Google Cloud Foundations', by: 'Google' },
-  { name: 'Docker Foundations', by: 'Docker' },
-  { name: 'DevOps Certificate', by: 'PagerDuty' },
-]
-
-export const education = {
-  school: 'Chandigarh University',
-  degree: 'B.E. Electronics & Telecommunication Engineering',
-  period: '2021 — 2025',
-}
+export const education = 'B.E. Electronics & Telecommunication, Chandigarh University, 2021 to 2025'
