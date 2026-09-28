@@ -2,7 +2,8 @@ import { useRef } from 'react'
 import { useGSAP } from '@gsap/react'
 import { setupMotion } from './motion'
 import Glyph from './Glyphs'
-import { DeskScene, EaselScene, GovernScene, HealScene, HeroScene, ProvisionScene, ShipScene } from './Scenes'
+import { DeskScene, EaselScene, GovernScene, HealScene, ProvisionScene } from './Scenes'
+import { ConveyorPlayer, SailingPlayer } from './remotion/players'
 import {
   awards,
   certs,
@@ -97,10 +98,10 @@ function PlateHead({
   label: string
   title: string
   verse: string[]
-  scene: React.ReactNode
+  scene?: React.ReactNode
 }) {
   return (
-    <div className="plate-top">
+    <div className={`plate-top ${scene ? '' : 'plate-top-solo'}`}>
       <header className="plate-head">
         <span className="numeral" aria-hidden="true">
           {roman}
@@ -111,7 +112,7 @@ function PlateHead({
         <h2 className="plate-title ink-in">{title}</h2>
         <Verse lines={verse} />
       </header>
-      <figure className="scene-wrap">{scene}</figure>
+      {scene && <figure className="scene-wrap">{scene}</figure>}
     </div>
   )
 }
@@ -161,7 +162,7 @@ function Hero() {
           </div>
         </div>
         <figure className="hero-art">
-          <HeroScene />
+          <SailingPlayer />
         </figure>
       </div>
     </section>
@@ -234,41 +235,14 @@ function Provision() {
 }
 
 function Ship() {
-  const total = pipeline.stages.reduce((a, s) => a + s.secs, 0)
   return (
     <section className="plate" id="ship" data-plate="ship">
       <div className="wrap">
-        <PlateHead roman="II" label="Ship" title="Every commit walks through five doors." verse={verses.ship} scene={<ShipScene />} />
+        <PlateHead roman="II" label="Ship" title="Every image rides through five checks." verse={verses.ship} />
       </div>
       <div className="wrap stage" data-stage="ship">
-        <div className="gates">
-          <span className="drop" aria-hidden="true" />
-          <span className="ground" aria-hidden="true" />
-          {pipeline.stages.map((s, i) => (
-            <div
-              key={s.name}
-              className={`gate ${s.flag ? 'gate-flag' : ''}`}
-              style={{ flexGrow: s.secs / total }}
-              data-at={pipeline.stages.slice(0, i + 1).reduce((a, x) => a + x.secs, 0) / total}
-            >
-              <span className="arch" aria-hidden="true" />
-              {s.flag && (
-                <span className="blot" aria-hidden="true">
-                  <Wash className="blot-red" blobs={[['vermilion', 200, 150, 120, 100]]} />
-                  <Wash className="blot-green" blobs={[['sap', 200, 150, 130, 110]]} />
-                </span>
-              )}
-              <span className="gate-name">{s.name}</span>
-              <span className="gate-tools mono">{s.tools}</span>
-              <span className="gate-time mono">{s.time}</span>
-              {s.flag && (
-                <span className="gate-note mono">
-                  <span className="n-red">2 critical CVEs</span>
-                  <span className="n-green">patched, rebuilt</span>
-                </span>
-              )}
-            </div>
-          ))}
+        <div className="conveyor">
+          <ConveyorPlayer />
         </div>
         <div className="ship-foot">
           <p className="big-num">

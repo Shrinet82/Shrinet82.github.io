@@ -3,6 +3,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
 import { useGSAP } from '@gsap/react'
 import { scenes } from './sceneMotion'
+import { players } from './remotion/players'
+import { CONVEYOR } from './remotion/Conveyor'
 
 gsap.registerPlugin(ScrollTrigger, SplitText, useGSAP)
 
@@ -88,7 +90,6 @@ function hero(root: HTMLElement) {
 
   const art = root.querySelector<HTMLElement>('.hero-art')!
   gsap.from(art, { opacity: 0, y: 24, duration: 1.4, ease: OUT, delay: 0.3 })
-  gsap.from(art.querySelectorAll('.scene-wash ellipse'), { scale: 0.6, opacity: 0, transformOrigin: '50% 50%', duration: 2, ease: 'power2.out', stagger: 0.2, delay: 0.2 })
 
   // As you leave, the scene drifts up a little slower than the page.
   gsap.to(art, { yPercent: -12, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } })
@@ -153,69 +154,26 @@ function provision(root: HTMLElement) {
   })
 }
 
-// II. An ink drop walks through five doors. Trivy stains the third one red,
-// then the fix washes over it green.
+// II. Scroll drives the Remotion conveyor frame by frame: the container
+// rides through the gates, gets patched, and is craned onto the ship.
 function ship(root: HTMLElement, { pin }: Opts): Cleanup {
   const stage = root.querySelector<HTMLElement>('[data-stage="ship"]')!
-  const gatesEl = stage.querySelector<HTMLElement>('.gates')!
-  const gates = [...gatesEl.querySelectorAll<HTMLElement>('.gate')]
-  const drop = gatesEl.querySelector<HTMLElement>('.drop')!
   const total = stage.querySelector('.ship-total')!
   const wall = 32 * 60 + 52
-  gatesEl.classList.add('is-live')
+  const last = CONVEYOR.durationInFrames - 1
 
   const update = (p: number) => {
-    gates.forEach((g, i) => {
-      const at = Number(g.dataset.at)
-      const prev = i === 0 ? 0 : Number(gates[i - 1].dataset.at)
-      const local = Math.min(1, Math.max(0, (p - prev) / (at - prev)))
-      g.classList.toggle('here', p > prev && p < at)
-      g.classList.toggle('passed', p >= at - 0.001)
-      if (g.classList.contains('gate-flag')) {
-        const red = Math.min(1, Math.max(0, (local - 0.15) / 0.3))
-        const green = Math.min(1, Math.max(0, (local - 0.6) / 0.3))
-        g.style.setProperty('--red', String(red))
-        g.style.setProperty('--green', String(green))
-        g.classList.toggle('cve-wait', red === 0)
-        g.classList.toggle('cve-red', red > 0 && green < 0.5)
-      }
-    })
+    players.conveyor?.seekTo(Math.round(p * last))
     total.textContent = minsec(p * wall)
   }
-
-  if (pin) {
-    gsap.fromTo(
-      drop,
-      { left: '0%' },
-      {
-        left: '100%',
-        ease: 'none',
-        scrollTrigger: { trigger: stage, start: 'top 12%', end: '+=160%', pin: true, scrub: 0.6, refreshPriority: 1, onUpdate: (s) => update(s.progress) },
-      },
-    )
-    update(0)
-  } else {
-    gates.forEach((g, i) =>
-      ScrollTrigger.create({
-        trigger: g,
-        start: 'top 70%',
-        end: 'bottom 40%',
-        scrub: 0.6,
-        onUpdate: (s) => {
-          const prev = i === 0 ? 0 : Number(gates[i - 1].dataset.at)
-          update(prev + (Number(g.dataset.at) - prev) * s.progress)
-        },
-      }),
-    )
-    update(0)
-  }
+  ScrollTrigger.create(
+    pin
+      ? { trigger: stage, start: 'top 14%', end: '+=180%', pin: true, scrub: 0.6, refreshPriority: 1, onUpdate: (s) => update(s.progress) }
+      : { trigger: stage.querySelector('.conveyor'), start: 'top 80%', end: 'bottom 25%', scrub: 0.6, onUpdate: (s) => update(s.progress) },
+  )
+  update(0)
   return () => {
-    gatesEl.classList.remove('is-live')
-    gates.forEach((g) => {
-      g.classList.remove('here', 'passed', 'cve-wait', 'cve-red')
-      g.style.removeProperty('--red')
-      g.style.removeProperty('--green')
-    })
+    players.conveyor?.seekTo(last)
     total.textContent = '32m 52s'
   }
 }

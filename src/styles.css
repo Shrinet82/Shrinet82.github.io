@@ -676,6 +676,9 @@ em {
 .plate-top .plate-head {
   margin-bottom: 0;
 }
+.plate-top-solo {
+  grid-template-columns: minmax(0, 1fr);
+}
 .scene-wrap {
   margin: 0;
 }
@@ -794,126 +797,12 @@ em {
   stroke-linecap: round;
 }
 
-/* II. Ship: five doors */
-.gates {
+/* II. Ship: the Remotion conveyor, scrubbed by scroll */
+.conveyor {
   position: relative;
-  display: flex;
-  gap: 10px;
-  padding: 0 0 18px;
-}
-.ground {
-  position: absolute;
-  left: -2%;
-  right: -2%;
-  bottom: 18px;
-  height: 2px;
-  background: var(--ink);
-  filter: url(#rough);
-}
-.drop {
-  position: absolute;
-  bottom: 12px;
-  left: 100%;
-  width: 14px;
-  height: 14px;
-  margin-left: -7px;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  background: var(--ultra);
-  z-index: 2;
-  display: none;
-}
-.gates.is-live .drop {
-  display: block;
-}
-.gate {
-  position: relative;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 4px;
-  height: 250px;
-  padding: 0 14px 22px;
-}
-.arch {
-  position: absolute;
-  inset: 0 0 18px 0;
-  border: 2.5px solid var(--ink);
-  border-bottom: 0;
-  border-radius: 999px 999px 0 0;
-  filter: url(#rough);
-  transition:
-    border-color 300ms ease,
-    background-color 300ms ease;
-  background: rgba(111, 154, 95, 0.1);
-}
-.gate-name {
-  position: relative;
-  font-family: var(--display);
-  font-size: 19px;
-  line-height: 1.2;
-}
-.gate-tools {
-  position: relative;
-  color: var(--graphite);
-  font-size: 12px;
-}
-.gate-time {
-  position: relative;
-  margin-top: 6px;
-  color: var(--ultra);
-  font-size: 15px;
-}
-.blot {
-  position: absolute;
-  inset: 20% 0 30% 0;
-  pointer-events: none;
-}
-.blot .wash {
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-.blot-red {
-  opacity: calc(var(--red, 0) * (1 - var(--green, 1)));
-}
-.blot-green {
-  opacity: var(--green, 1);
-}
-.gate-note {
-  position: relative;
-  font-size: 12px;
-}
-.n-red {
-  color: var(--vermilion);
-  display: none;
-}
-.n-green {
-  color: var(--sap);
-}
-.gate-flag.cve-red .n-red {
-  display: inline;
-}
-.gate-flag.cve-red .n-green,
-.gate-flag.cve-wait .n-green {
-  display: none;
-}
-
-/* While the story plays, doors wait their turn. */
-.gates.is-live .gate:not(.passed):not(.here) .arch {
-  border-color: var(--rule);
-  background: transparent;
-}
-.gates.is-live .gate:not(.passed):not(.here) :is(.gate-name, .gate-tools, .gate-time) {
-  opacity: 0.35;
-}
-.gates.is-live .gate.here .arch {
-  border-color: var(--ultra);
-  background: rgba(38, 68, 143, 0.06);
-}
-.gate :is(.gate-name, .gate-tools, .gate-time) {
-  transition: opacity 300ms ease;
+  left: 50%;
+  width: min(1600px, 100vw - var(--gutter) * 2);
+  translate: -50% 0;
 }
 
 .ship-foot {
@@ -1456,32 +1345,6 @@ em {
 }
 
 @media (max-width: 959px) {
-  .gates {
-    flex-direction: column;
-    gap: 14px;
-    padding: 0 0 0 26px;
-  }
-  .ground {
-    left: 8px;
-    right: auto;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    height: auto;
-  }
-  .gates.is-live .drop {
-    display: none;
-  }
-  .gate {
-    flex-grow: 0 !important;
-    height: auto;
-    padding: 18px 18px 18px 22px;
-  }
-  .arch {
-    inset: 0;
-    border: 2px solid var(--ink);
-    border-radius: 0 60px 60px 0;
-  }
   .ship-foot,
   .cv,
   .cv dl {

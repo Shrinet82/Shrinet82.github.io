@@ -215,7 +215,7 @@ export const education = 'B.E. Electronics & Telecommunication, Chandigarh Unive
 // replace with your own poems whenever you like.
 export const verses = {
   provision: ['A bucket used to take an afternoon,', 'three people, and a ticket no one read.', 'Now it takes a form.'],
-  ship: ['Five doors, and each one asks a question.', 'The code does not get to lie at any of them.'],
+  ship: ['One belt, five checks, and every one asks a question.', 'The image does not get to lie at any of them.'],
   govern: ['The glitch kept making buckets in the dark.', 'A rule woke up before anyone had to.'],
   heal: ['It notices. It proposes. It waits for a yes,', 'then writes the fix down in Git,', 'where everything worth keeping is kept.'],
 }

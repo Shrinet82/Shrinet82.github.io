@@ -20,42 +20,6 @@ function drawable(el: SVGGeometryElement) {
   return len
 }
 
-const hero: Build = (svg) => {
-  const led = one(svg, '.led-bad')
-  const arm = one(svg, '.arm')
-  const envelope = one(svg, '.envelope')
-  const notif = one(svg, '.notif')
-  const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.6 })
-  tl.call(() => led.classList.add('bad'))
-    .set(notif, { opacity: 0 })
-    .to(arm, { rotate: -16, svgOrigin: '366 326', duration: 0.16, yoyo: true, repeat: 7, ease: 'sine.inOut' }, 0.4)
-    .call(() => led.classList.remove('bad'))
-    .to(one(svg, '.antenna'), { scale: 1.5, transformOrigin: '50% 50%', duration: 0.15, yoyo: true, repeat: 1 })
-    .set(envelope, { opacity: 1 })
-    .to(envelope, {
-      duration: 1.5,
-      ease: 'power1.inOut',
-      motionPath: { path: one(svg, '#pr-route') as SVGPathElement, align: one(svg, '#pr-route') as SVGPathElement, alignOrigin: [0.5, 0.5] },
-    })
-    .set(envelope, { opacity: 0 })
-    .fromTo(notif, { opacity: 0, scale: 0.7, transformOrigin: '50% 100%' }, { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(2)' })
-    .to(notif, { opacity: 0, duration: 0.4 }, '+=2.2')
-
-  const zzz = q(svg, '.zzz text').map((z, i) =>
-    gsap.fromTo(
-      z,
-      { opacity: 0, y: 8 },
-      { keyframes: [{ opacity: 1, y: -4, duration: 0.8 }, { opacity: 0, y: -18, duration: 1 }], repeat: -1, delay: i * 0.6, repeatDelay: 0.6, ease: 'sine.inOut' },
-    ),
-  )
-  const stars = q(svg, '.star').map((s, i) =>
-    gsap.to(s, { opacity: 0.25, scale: 0.6, transformOrigin: '50% 50%', duration: 0.9 + i * 0.2, yoyo: true, repeat: -1, ease: 'sine.inOut' }),
-  )
-  const breathe = gsap.to(one(svg, '.blanket'), { scaleY: 1.05, transformOrigin: '50% 100%', duration: 1.8, yoyo: true, repeat: -1, ease: 'sine.inOut' })
-  const moon = gsap.to(one(svg, '.moon'), { y: -4, duration: 2.4, yoyo: true, repeat: -1, ease: 'sine.inOut' })
-  return [tl, ...zzz, ...stars, breathe, moon]
-}
-
 const provision: Build = (svg) => {
   const sway = q(svg, '.person').map((p, i) =>
     gsap.to(p, { rotate: i % 2 ? 3 : -3, transformOrigin: '50% 100%', duration: 1.4 + i * 0.3, yoyo: true, repeat: -1, ease: 'sine.inOut' }),
@@ -81,31 +45,6 @@ const provision: Build = (svg) => {
     .to(cursor, { x: 470, y: 320, duration: 0.6, ease: 'power2.inOut' }, '<')
     .to(pail, { x: 70, opacity: 0, duration: 0.7, ease: 'power2.in' }, '+=1.4')
   return [...sway, long, short, tl]
-}
-
-const ship: Build = (svg) => {
-  const rollers = q(svg, '.roller').map((r) => {
-    const c = r.querySelector('circle')!
-    return gsap.to(r, { rotate: 360, svgOrigin: `${c.getAttribute('cx')} 247`, duration: 1.1, repeat: -1, ease: 'none' })
-  })
-  const parcel = one(svg, '.parcel')
-  const bug = one(svg, '.bug')
-  const zap = one(svg, '.zap')
-  const stamp = one(svg, '.stamp')
-  const beam = one(svg, '.beam')
-  const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.3 })
-  tl.set(stamp, { opacity: 0 })
-    .fromTo(parcel, { x: -40, y: 238 }, { x: 270, duration: 1.8, ease: 'none' })
-    .to(beam, { opacity: 0.45, duration: 0.2, yoyo: true, repeat: 3 })
-    .fromTo(bug, { opacity: 0, scale: 0.3, transformOrigin: '50% 50%' }, { opacity: 1, scale: 1, y: -6, duration: 0.35, ease: 'back.out(3)' }, '-=0.3')
-    .to(bug, { x: 3, duration: 0.06, yoyo: true, repeat: 5 })
-    .fromTo(zap, { opacity: 0, scale: 0.4, transformOrigin: '14px -54px' }, { opacity: 1, scale: 1.1, duration: 0.18 })
-    .to(bug, { opacity: 0, scale: 0, duration: 0.2 }, '<')
-    .to(zap, { opacity: 0, duration: 0.25 })
-    .fromTo(stamp, { opacity: 0, scale: 1.8, transformOrigin: '16px -20px' }, { opacity: 1, scale: 1, duration: 0.35, ease: 'back.out(2)' })
-    .to(parcel, { x: 560, duration: 1.6, ease: 'none' }, '+=0.3')
-    .to(one(svg, '.cloud'), { scale: 1.08, transformOrigin: '50% 50%', duration: 0.2, yoyo: true, repeat: 1 }, '-=0.5')
-  return [...rollers, tl]
 }
 
 const govern: Build = (svg) => {
@@ -192,7 +131,7 @@ const desk: Build = (svg) => {
   return [...steam, led]
 }
 
-const builds: Record<string, Build> = { hero, provision, ship, govern, heal, easel, desk }
+const builds: Record<string, Build> = { provision, govern, heal, easel, desk }
 
 export function scenes(root: HTMLElement) {
   const cleanups: (() => void)[] = []
@@ -210,7 +149,7 @@ export function scenes(root: HTMLElement) {
     cleanups.push(() => {
       st.kill()
       loops.forEach((l) => l.revert())
-      q(svg, '.led-bad, .pr-btn').forEach((el) => el.classList.remove('bad', 'idle'))
+      q(svg, '.pr-btn').forEach((el) => el.classList.remove('idle'))
     })
   })
   return () => cleanups.forEach((c) => c())
