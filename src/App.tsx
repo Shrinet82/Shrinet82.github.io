@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { useGSAP } from '@gsap/react'
 import { setupMotion } from './motion'
 import Glyph from './Glyphs'
+import { DeskScene, EaselScene, GovernScene, HealScene, HeroScene, ProvisionScene, ShipScene } from './Scenes'
 import {
   awards,
   certs,
@@ -85,18 +86,33 @@ function Verse({ lines }: { lines: string[] }) {
   )
 }
 
-function PlateHead({ roman, label, title, verse }: { roman: string; label: string; title: string; verse: string[] }) {
+function PlateHead({
+  roman,
+  label,
+  title,
+  verse,
+  scene,
+}: {
+  roman: string
+  label: string
+  title: string
+  verse: string[]
+  scene: React.ReactNode
+}) {
   return (
-    <header className="plate-head">
-      <span className="numeral" aria-hidden="true">
-        {roman}
-      </span>
-      <p className="plate-label mono ink-in">
-        Plate {roman} · {label}
-      </p>
-      <h2 className="plate-title ink-in">{title}</h2>
-      <Verse lines={verse} />
-    </header>
+    <div className="plate-top">
+      <header className="plate-head">
+        <span className="numeral" aria-hidden="true">
+          {roman}
+        </span>
+        <p className="plate-label mono ink-in">
+          Plate {roman} · {label}
+        </p>
+        <h2 className="plate-title ink-in">{title}</h2>
+        <Verse lines={verse} />
+      </header>
+      <figure className="scene-wrap">{scene}</figure>
+    </div>
   )
 }
 
@@ -118,32 +134,6 @@ function Topbar() {
         Write to me
       </a>
     </header>
-  )
-}
-
-// The Kubernetes wheel, painted: seven spokes, one brush ring.
-function HeroArt() {
-  const cx = 200
-  const cy = 200
-  const pts = Array.from({ length: 7 }, (_, i) => {
-    const a = (i / 7) * Math.PI * 2 - Math.PI / 2
-    return [cx + Math.cos(a) * 150, cy + Math.sin(a) * 150, cx + Math.cos(a) * 40, cy + Math.sin(a) * 40]
-  })
-  const ring = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ') + ' Z'
-  return (
-    <figure className="hero-art">
-      <Wash className="wash-hero" blobs={[['ultra', 190, 150, 150, 120], ['ochre', 290, 210, 90, 70]]} />
-      <svg viewBox="0 0 400 400" className="wheel" role="img" aria-label="A hand-painted Kubernetes wheel">
-        <g filter="url(#rough)">
-          <path className="ink-draw brush" d={ring} />
-          {pts.map(([x, y, x2, y2], i) => (
-            <line key={i} className="ink-draw spoke" x1={x2} y1={y2} x2={x} y2={y} />
-          ))}
-          <circle className="ink-draw hub" cx={cx} cy={cy} r="40" />
-        </g>
-      </svg>
-      <figcaption className="mono fig">fig. 1, the wheel. Seven spokes, painted by hand.</figcaption>
-    </figure>
   )
 }
 
@@ -170,7 +160,9 @@ function Hero() {
             </a>
           </div>
         </div>
-        <HeroArt />
+        <figure className="hero-art">
+          <HeroScene />
+        </figure>
       </div>
     </section>
   )
@@ -182,7 +174,7 @@ function Provision() {
   return (
     <section className="plate" id="provision" data-plate="provision">
       <div className="wrap">
-        <PlateHead roman="I" label="Provision" title="Infrastructure used to be a ticket." verse={verses.provision} />
+        <PlateHead roman="I" label="Provision" title="Infrastructure used to be a ticket." verse={verses.provision} scene={<ProvisionScene />} />
         <div className="two">
           <figure className="sketch">
             <svg viewBox="0 0 520 250" role="img" aria-label="A pile of tickets crossed out, becoming one form">
@@ -246,7 +238,7 @@ function Ship() {
   return (
     <section className="plate" id="ship" data-plate="ship">
       <div className="wrap">
-        <PlateHead roman="II" label="Ship" title="Every commit walks through five doors." verse={verses.ship} />
+        <PlateHead roman="II" label="Ship" title="Every commit walks through five doors." verse={verses.ship} scene={<ShipScene />} />
       </div>
       <div className="wrap stage" data-stage="ship">
         <div className="gates">
@@ -301,7 +293,7 @@ function Govern() {
   return (
     <section className="plate" id="govern" data-plate="govern">
       <div className="wrap">
-        <PlateHead roman="III" label="Govern" title="Then a glitch started spawning buckets." verse={verses.govern} />
+        <PlateHead roman="III" label="Govern" title="Then a glitch started spawning buckets." verse={verses.govern} scene={<GovernScene />} />
         <figure className="chart">
           <div className="chart-scroll">
             <Wash className="wash-band" blobs={[['vermilion', 200, 150, 150, 140]]} />
@@ -375,7 +367,7 @@ function Heal() {
   return (
     <section className="plate" id="heal" data-plate="heal">
       <div className="wrap">
-        <PlateHead roman="IV" label="Heal" title="So I taught the cluster to open its own PRs." verse={verses.heal} />
+        <PlateHead roman="IV" label="Heal" title="So I taught the cluster to open its own PRs." verse={verses.heal} scene={<HealScene />} />
       </div>
       <div className="wrap stage heal-stage" data-stage="heal">
         <figure className="enso">
@@ -438,16 +430,21 @@ function Studies() {
   return (
     <section className="plate" id="studies" data-plate="studies">
       <div className="wrap">
-        <header className="plate-head">
-          <span className="numeral" aria-hidden="true">
-            V
-          </span>
-          <p className="plate-label mono ink-in">Plate V · Studies</p>
-          <h2 className="plate-title ink-in">Smaller studies, same hand.</h2>
-          <p className="prose lead ink-in">
-            Model serving, security streams, and one farm that pages you before the plants die.
-          </p>
-        </header>
+        <div className="plate-top">
+          <header className="plate-head">
+            <span className="numeral" aria-hidden="true">
+              V
+            </span>
+            <p className="plate-label mono ink-in">Plate V · Studies</p>
+            <h2 className="plate-title ink-in">Smaller studies, same hand.</h2>
+            <p className="prose lead ink-in">
+              Model serving, security streams, and one farm that pages you before the plants die.
+            </p>
+          </header>
+          <figure className="scene-wrap scene-wrap-sm">
+            <EaselScene />
+          </figure>
+        </div>
         <div className="gallery">
           {elsewhere.map((p, i) => (
             <article key={p.title} className="frame" data-speed={[0.9, 1.15, 1, 1.2, 0.95, 1.1, 1.05][i % 7]}>
@@ -562,6 +559,7 @@ function Letters() {
           </span>
         </h2>
         <div className="letters-grid">
+
           <figure className="portrait ink-in">
             <img src="/assets/profile.jpg" alt="Shashwat Pratap Singh" width="200" height="250" loading="lazy" />
           </figure>
@@ -583,6 +581,9 @@ function Letters() {
               </a>
             </div>
           </div>
+          <figure className="scene-wrap letters-scene">
+            <DeskScene />
+          </figure>
         </div>
         <p className="colophon mono">
           © {new Date().getFullYear()} {profile.name}. Set in Fraunces, Instrument Sans and IBM Plex Mono. Ink on

@@ -435,7 +435,6 @@ em {
 .hero-art {
   position: relative;
   margin: 0;
-  aspect-ratio: 1;
 }
 .wash-hero {
   inset: -8% -12% -4% -8%;
@@ -458,16 +457,232 @@ em {
   stroke-width: 6;
 }
 
+/* ---------- Illustrated scenes ---------- */
+
+.scene {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.scene text {
+  font-family: var(--mono);
+}
+/* The broom waits off-stage between sweeps. */
+.scene[data-scene='govern'] {
+  overflow: hidden;
+}
+.s-ink {
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.s-ink.thin {
+  stroke-width: 1.2;
+}
+.s-dot {
+  fill: var(--ink);
+}
+.fill-paper {
+  fill: #fbf8f2;
+}
+.fill-ink {
+  fill: var(--ink);
+}
+.fill-skin {
+  fill: #ecc9a6;
+}
+.fill-night {
+  fill: #3d5ba8;
+}
+.fill-moon {
+  fill: #f6e2a8;
+}
+.fill-blanket {
+  fill: #b9c6e4;
+}
+.fill-rack {
+  fill: var(--paper-2);
+}
+.fill-screen {
+  fill: #dfe7d6;
+}
+.fill-jar {
+  fill: rgba(185, 198, 228, 0.45);
+}
+.fill-ultra {
+  fill: #7b95cf;
+}
+.fill-ultra-soft {
+  fill: #c9d3ec;
+}
+.fill-ochre {
+  fill: var(--ochre-wash);
+}
+.fill-ochre-soft {
+  fill: #eed3a0;
+}
+.fill-vermilion {
+  fill: #e98a74;
+}
+.fill-sap {
+  fill: #a9c49b;
+}
+.fill-sand {
+  fill: var(--ochre-wash);
+}
+.star {
+  fill: #f6e2a8;
+}
+.zzz text {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 22px;
+  fill: var(--ultra);
+}
+.led {
+  fill: var(--sap-wash);
+  stroke: var(--ink);
+  stroke-width: 1;
+}
+.led.bad {
+  fill: var(--vermilion-wash);
+}
+.route {
+  fill: none;
+  stroke: var(--faint);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 5;
+}
+.envelope,
+.bug,
+.zap,
+.pr-card {
+  opacity: 0;
+}
+.notif-t,
+.btn-t,
+.bubble-t,
+.pr-card-t,
+.tag-t,
+.thing-t,
+.parcel-t,
+.pail-t,
+.pager-t {
+  font-size: 12px;
+  fill: var(--ink);
+}
+.notif-t {
+  fill: var(--sap);
+}
+.bubble-t {
+  font-size: 13px;
+}
+.pail-t {
+  fill: #fbf8f2;
+  font-weight: 500;
+}
+.pager-t {
+  font-size: 10px;
+  fill: var(--sap);
+}
+.check-ok {
+  stroke: var(--sap);
+  stroke-width: 2.5;
+}
+.sign {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  fill: var(--ink);
+  text-anchor: middle;
+}
+.scene-cap,
+.scene-note {
+  font-size: 13px;
+  fill: var(--graphite);
+}
+.scene-cap {
+  font-family: var(--display) !important;
+  font-style: italic;
+  font-size: 16px;
+}
+.n-ultra-t {
+  fill: var(--ultra);
+}
+.n-red-t {
+  fill: var(--vermilion);
+}
+.n-sap-t {
+  fill: var(--sap);
+}
+.beam {
+  fill: #7b95cf;
+  opacity: 0.18;
+}
+.zap-ray {
+  stroke: var(--vermilion);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.stamp-ring {
+  stroke: var(--sap);
+  fill: #fbf8f2;
+}
+.pr-btn {
+  fill: #7b95cf;
+}
+.pr-btn.idle {
+  fill: #fbf8f2;
+}
+.merge-dot {
+  fill: var(--sap-wash);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.steam-line {
+  fill: none;
+  stroke: var(--faint);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+.pager-led {
+  fill: var(--sap-wash);
+}
+
 /* ---------- Plates ---------- */
 
 .plate {
   position: relative;
-  padding-top: clamp(110px, 15vw, 190px);
+  padding-top: clamp(72px, 9vw, 120px);
 }
 .plate-head {
   position: relative;
   max-width: 820px;
-  margin-bottom: clamp(44px, 6vw, 80px);
+  margin-bottom: clamp(32px, 4vw, 56px);
+}
+
+/* Heading on the left, its illustrated scene on the right. */
+.plate-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 64px);
+  align-items: center;
+  margin-bottom: clamp(32px, 4vw, 56px);
+}
+.plate-top .plate-head {
+  margin-bottom: 0;
+}
+.scene-wrap {
+  margin: 0;
+}
+.scene-wrap-sm {
+  max-width: 380px;
+  justify-self: end;
+  width: 100%;
 }
 .numeral {
   position: absolute;
@@ -618,7 +833,7 @@ em {
   flex-direction: column;
   justify-content: flex-end;
   gap: 4px;
-  height: 300px;
+  height: 250px;
   padding: 0 14px 22px;
 }
 .arch {
@@ -706,7 +921,7 @@ em {
   grid-template-columns: auto 1fr;
   gap: 24px 64px;
   align-items: start;
-  margin-top: 44px;
+  margin-top: 32px;
 }
 .big-num {
   margin: 0;
@@ -759,7 +974,7 @@ em {
   stroke-width: 4;
 }
 .facts {
-  margin-top: 56px;
+  margin-top: 36px;
   align-items: start;
 }
 .fact {
@@ -871,7 +1086,7 @@ em {
 
 /* Tagline */
 .tagline {
-  padding: clamp(140px, 18vw, 240px) 0 clamp(20px, 4vw, 60px);
+  padding: clamp(80px, 10vw, 140px) 0 0;
 }
 .tagline-text {
   margin: 0 auto;
@@ -1158,10 +1373,10 @@ em {
 }
 .letters-grid {
   display: grid;
-  grid-template-columns: 200px minmax(0, 560px);
-  gap: 48px;
-  align-items: start;
-  margin-top: 64px;
+  grid-template-columns: 180px minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 48px);
+  align-items: center;
+  margin-top: 48px;
 }
 .portrait {
   margin: 0;
@@ -1182,7 +1397,7 @@ em {
   font-size: 18px;
 }
 .colophon {
-  margin: 120px 0 0;
+  margin: 72px 0 0;
   padding-top: 18px;
   border-top: 1px solid var(--rule);
   color: var(--faint);
@@ -1206,8 +1421,21 @@ em {
 @media (max-width: 1000px) {
   .hero-grid,
   .two,
-  .heal-stage {
+  .heal-stage,
+  .plate-top {
     grid-template-columns: 1fr;
+  }
+  .scene-wrap {
+    max-width: 520px;
+  }
+  .scene-wrap-sm {
+    justify-self: start;
+  }
+  .letters-grid {
+    grid-template-columns: 160px minmax(0, 1fr);
+  }
+  .letters-scene {
+    grid-column: 1 / -1;
   }
   .hero-art {
     max-width: 460px;
@@ -1273,6 +1501,9 @@ em {
   }
   .letters-grid {
     grid-template-columns: 1fr;
+  }
+  .letters-scene {
+    grid-column: auto;
   }
   .portrait {
     width: 160px;

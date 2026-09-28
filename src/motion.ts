@@ -2,6 +2,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
 import { useGSAP } from '@gsap/react'
+import { scenes } from './sceneMotion'
 
 gsap.registerPlugin(ScrollTrigger, SplitText, useGSAP)
 
@@ -86,18 +87,11 @@ function hero(root: HTMLElement) {
   gsap.from(root.querySelectorAll('.hero-in'), { opacity: 0, y: 14, duration: 1, ease: OUT, stagger: 0.1, delay: 0.6 })
 
   const art = root.querySelector<HTMLElement>('.hero-art')!
-  gsap.from(art.querySelector('.wash-hero'), { opacity: 0, scale: 0.8, duration: 2.2, ease: 'power2.out', delay: 0.2 })
-  const strokes = [...art.querySelectorAll<SVGGeometryElement>('.ink-draw')]
-  const tl = gsap.timeline({ delay: 0.5 })
-  strokes.forEach((s, i) => {
-    const len = inkable(s)
-    tl.fromTo(s, { strokeDashoffset: len }, { strokeDashoffset: 0, duration: i === 0 ? 1.6 : 0.35, ease: 'power2.inOut' }, i === 0 ? 0 : '>-0.2')
-  })
-  gsap.from(art.querySelector('.fig'), { opacity: 0, duration: 1, delay: 2.6 })
+  gsap.from(art, { opacity: 0, y: 24, duration: 1.4, ease: OUT, delay: 0.3 })
+  gsap.from(art.querySelectorAll('.scene-wash ellipse'), { scale: 0.6, opacity: 0, transformOrigin: '50% 50%', duration: 2, ease: 'power2.out', stagger: 0.2, delay: 0.2 })
 
-  // As you leave, the painting drifts up and the wash slowly turns.
-  gsap.to(art, { yPercent: -18, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } })
-  gsap.to(art.querySelector('.wash-hero'), { rotate: 14, scale: 1.12, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } })
+  // As you leave, the scene drifts up a little slower than the page.
+  gsap.to(art, { yPercent: -12, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } })
 }
 
 function plates(root: HTMLElement) {
@@ -119,6 +113,11 @@ function plates(root: HTMLElement) {
           scrollTrigger: { trigger: plate.querySelector('.verse'), start: 'top 85%', end: 'bottom 45%', scrub: 0.6 },
         },
       )
+  })
+
+  root.querySelectorAll<HTMLElement>('.plate .scene-wrap').forEach((w) => {
+    gsap.from(w, { opacity: 0, y: 40, rotate: 1.5, duration: 1.2, ease: OUT, scrollTrigger: { trigger: w, start: 'top 88%', once: true } })
+    gsap.fromTo(w.firstElementChild, { y: 30 }, { y: -30, ease: 'none', scrollTrigger: { trigger: w, start: 'top bottom', end: 'bottom top', scrub: true } })
   })
 
   const inks = root.querySelectorAll('.ink-in')
@@ -430,6 +429,7 @@ export function setupMotion(root: HTMLElement) {
       tagline(root)
       cleanups.push(studies(root))
       letters(root)
+      cleanups.push(scenes(root))
       if (wide) cleanups.push(thread(root))
       return () => cleanups.forEach((c) => c && c())
     },
