@@ -178,6 +178,7 @@ export function LighthousePlayer({ progress }: Film) {
       width={size.width}
       height={size.height}
       frames={LIGHTHOUSE.durationInFrames}
+      fps={LIGHTHOUSE.fps}
       inputProps={{ narrow, viewWidth: size.width }}
     />
   )
@@ -195,6 +196,7 @@ export function LoopPlayer({ progress }: Film) {
       width={width}
       height={LOOP.height}
       frames={LOOP.durationInFrames}
+      fps={LOOP.fps}
       inputProps={{ viewWidth: width }}
     />
   )

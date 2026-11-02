@@ -1,14 +1,18 @@
 import { AbsoluteFill, Interactive, interpolate, useCurrentFrame } from 'remotion'
 import { C, Defs, WashLayer, clamp, ease, lerp, mono, osc, prog, seaPath, serif, serifItalic } from './kit'
 
-// Plate III (Project Aegis). Scroll-scrubbed. A platform glitch keeps
+// Plate III (Project Aegis), true to the README. A platform glitch keeps
 // stacking buckets and servers on the quay at night, one of them with SSH
-// open to the world. The Aegis lighthouse runs its Cloud Custodian policies:
-// the beam marks every resource that breaks a rule, then sweeps them away and
-// revokes the open rule. Along the bottom, the on-call path's seven manual
-// steps (4-24h) against Aegis (under 2 minutes).
+// open to the world. Every create is a CloudTrail event; EventBridge carries
+// it to the Aegis lighthouse, whose Lambda runs the Cloud Custodian policies.
+// Mark and sweep: the beam tags each resource that breaks a rule, a grace
+// period runs, then the sweep removes them and revokes the open rule. The
+// Powerpipe board counts pending and recent kills. Along the bottom, the
+// on-call path's seven manual steps (4-24h) against Aegis (under 2 minutes).
+//
+// 60 fps, timed in beats of 1/30 s (two frames each), 360 beats in all.
 
-export const LIGHTHOUSE = { width: 1000, height: 600, fps: 30, durationInFrames: 360 }
+export const LIGHTHOUSE = { width: 1000, height: 600, fps: 60, durationInFrames: 720 }
 // Phones: a 600px camera follows the action and the two paths wrap onto more rows.
 export const LIGHTHOUSE_NARROW = { width: 600, height: 700 }
 const ID = 'lh'
@@ -75,7 +79,7 @@ function Server({ f, lock }: { f: number; lock: number }) {
 const NIGHT = [{ cx: 480, cy: 220, rx: 520, ry: 210, fill: C.night, opacity: 0.72 }]
 
 export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({ narrow = false, viewWidth = LIGHTHOUSE_NARROW.width }) => {
-  const f = useCurrentFrame()
+  const f = useCurrentFrame() / 2 // in beats
   const lampOn = prog(f, 150, 164, ease.out)
   // beam angle: points at the quay's right end, sweeps to its left end, returns to idle
   // SVG angles (y down): 144deg hits the quay's right end, 164deg its left end, 176deg the horizon
@@ -116,7 +120,11 @@ export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({
           <stop offset="0.55" stopColor={C.moon} stopOpacity={0.4} />
           <stop offset="1" stopColor={C.moon} stopOpacity={0.06} />
         </linearGradient>
+        <clipPath id={`${ID}-sky`}>
+          <rect x={-20} y={0} width={1040} height={QUAY + 22} />
+        </clipPath>
         <path
+          clipPath={`url(#${ID}-sky)`}
           d={`M ${LAMP.x} ${LAMP.y} L ${LAMP.x + Math.cos(beamRad - 0.08) * 1000} ${LAMP.y + Math.sin(beamRad - 0.08) * 1000} L ${LAMP.x + Math.cos(beamRad + 0.08) * 1000} ${LAMP.y + Math.sin(beamRad + 0.08) * 1000} Z`}
           fill={`url(#${ID}-beam)`}
           opacity={lampOn * 0.7}
@@ -148,6 +156,9 @@ export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({
         <text x={888} y={486} textAnchor="middle" fontFamily={mono} fontSize={13} fill={C.graphite}>
           cloud custodian
         </text>
+        <text x={888} y={503} textAnchor="middle" fontFamily={mono} fontSize={11.5} fill={C.faint}>
+          cloudtrail → eventbridge → λ
+        </text>
 
         {/* the quay */}
         <g filter={`url(#${ID}-rough)`}>
@@ -178,21 +189,88 @@ export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({
             <Interactive.G key={i} name={`${t.kind} ${i}`} style={{ opacity: 1 - gone }}>
               <g transform={`translate(${t.x} ${y}) scale(${1 - gone * 0.3})`}>
                 {t.kind === 'bucket' ? <Bucket /> : <Server f={f} lock={t.open ? lock : -1} />}
-                {/* mark: a paper tag with the rule it broke */}
-                {marked && (
-                  <g transform="translate(-6 -62)" opacity={prog(f, markAt(t), markAt(t) + 6)}>
-                    <path d="M0 0 L 88 0 L 95 9 L 88 18 L 0 18 Z" fill={t.open ? C.sapSoft : C.vermSoft} stroke={t.open ? C.sap : C.vermilion} strokeWidth={1.2} />
-                    <text x={6} y={13} fontFamily={mono} fontSize={12} fill={t.open ? C.sap : C.vermilion}>
-                      {t.open ? 'ssh revoked' : 'no owner'}
-                    </text>
-                  </g>
-                )}
+                {/* mark: a luggage tag, and an hourglass for the grace period; the open
+                    server's tag says what was done */}
+                {marked &&
+                  (t.open ? (
+                    <g transform="translate(-6 -62)" opacity={prog(f, markAt(t), markAt(t) + 6)}>
+                      <path d="M0 0 L 88 0 L 95 9 L 88 18 L 0 18 Z" fill={C.sapSoft} stroke={C.sap} strokeWidth={1.2} />
+                      <text x={6} y={13} fontFamily={mono} fontSize={12} fill={C.sap}>
+                        ssh revoked
+                      </text>
+                    </g>
+                  ) : (
+                    <g transform={`translate(${t.kind === 'bucket' ? 10 : 16} -46) rotate(14)`} opacity={prog(f, markAt(t), markAt(t) + 6)}>
+                      <path d="M0 0 L 14 0 L 18 6 L 14 12 L 0 12 Z" fill={C.vermSoft} stroke={C.vermilion} strokeWidth={1.1} />
+                      <circle cx={13} cy={6} r={1.6} fill={C.paper} stroke={C.vermilion} strokeWidth={0.8} />
+                      <line x1={4} y1={4} x2={9} y2={4} stroke={C.vermilion} strokeWidth={1} />
+                      <line x1={4} y1={8} x2={8} y2={8} stroke={C.vermilion} strokeWidth={1} />
+                      {(() => {
+                        const g = prog(f, markAt(t), sweepAt(i))
+                        return (
+                          <g transform="translate(22 -1) scale(0.8)">
+                            <path d="M0 0 L 10 0 L 5 8 L 10 16 L 0 16 L 5 8 Z" fill={C.paper} stroke={C.ink} strokeWidth={1.2} />
+                            <path d={`M ${1 + g * 4} ${g * 7.5} L ${9 - g * 4} ${g * 7.5} L 5 8 Z`} fill={C.ochreWash} />
+                            <path d={`M ${5 - g * 4} ${16 - g * 3} L ${5 + g * 4} ${16 - g * 3} L 10 16 L 0 16 Z`} fill={C.ochreWash} opacity={g > 0.02 ? 1 : 0} />
+                          </g>
+                        )
+                      })()}
+                    </g>
+                  ))}
               </g>
               {/* falling line from the crane hook */}
               {land < 1 && <line x1={t.x} y1={118} x2={t.x} y2={y - 34} stroke={C.ink} strokeWidth={1} opacity={0.6} />}
             </Interactive.G>
           )
         })}
+        {/* one legend for all the marks, while the grace period runs */}
+        <g opacity={prog(f, 176, 186) * (1 - prog(f, 262, 272))} transform="translate(196 222)">
+          <path d="M0 0 L 14 0 L 18 6 L 14 12 L 0 12 Z" fill={C.vermSoft} stroke={C.vermilion} strokeWidth={1.1} />
+          <text x={26} y={11} fontFamily={mono} fontSize={13} fill={C.vermSoft}>
+            marked: no owner tag · swept after a grace period
+          </text>
+        </g>
+        {/* every create is a CloudTrail event; EventBridge carries it to the lighthouse */}
+        {things.map((t, i) => {
+          const e = prog(f, dropAt(i) + 10, dropAt(i) + 30, ease.inOut)
+          if (e <= 0 || e >= 1) return null
+          const ex = lerp(t.x, 872, e)
+          const ey = lerp(t.y - 20, 300, e) - Math.sin(e * Math.PI) * 70
+          return <circle key={`ev${i}`} cx={ex} cy={ey} r={3.4} fill={C.ochreWash} stroke={C.ink} strokeWidth={0.8} opacity={Math.sin(e * Math.PI) * 0.4 + 0.6} />
+        })}
+        {/* the Powerpipe board on the rock: pending and recent kills */}
+        {(() => {
+          let pending = 0
+          let kills = 0
+          things.forEach((t, i) => {
+            const marked = f >= markAt(t)
+            const swept = t.open ? f >= markAt(t) + 10 : f >= sweepAt(i) + 13
+            if (swept) kills++
+            else if (marked) pending++
+          })
+          return (
+            <g transform="translate(918 252)">
+              <rect x={0} y={0} width={78} height={92} rx={4} fill={C.paper} stroke={C.ink} strokeWidth={1.6} />
+              <text x={39} y={16} textAnchor="middle" fontFamily={mono} fontSize={11} fill={C.graphite}>
+                powerpipe
+              </text>
+              <line x1={6} y1={22} x2={72} y2={22} stroke={C.rule} strokeWidth={1} />
+              <text x={39} y={46} textAnchor="middle" fontFamily={serif} fontSize={22} fill={pending ? C.vermilion : C.faint}>
+                {pending}
+              </text>
+              <text x={39} y={57} textAnchor="middle" fontFamily={mono} fontSize={9.5} fill={C.graphite}>
+                pending
+              </text>
+              <text x={39} y={78} textAnchor="middle" fontFamily={serif} fontSize={18} fill={kills ? C.sap : C.faint}>
+                {kills}
+              </text>
+              <text x={39} y={88} textAnchor="middle" fontFamily={mono} fontSize={9.5} fill={C.graphite}>
+                recent kills
+              </text>
+              <line x1={39} y1={92} x2={39} y2={118} stroke={C.ink} strokeWidth={2} />
+            </g>
+          )
+        })()}
         {/* the open rule on the exposed server, until it is revoked */}
         <text x={452} y={QUAY - 70} fontFamily={mono} fontSize={13} fill={C.vermSoft} opacity={f >= dropAt(4) + 12 && f < markAt(things[4]) ? 1 : 0}>
           22 · 0.0.0.0/0

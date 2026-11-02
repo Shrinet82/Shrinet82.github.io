@@ -966,14 +966,65 @@ em {
   white-space: pre;
 }
 
-/* V. Studies: framed diagrams */
-.gallery {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(28px, 4vw, 56px) clamp(20px, 3vw, 40px);
+/* V. Studies: a pinned gallery walk. The track is the plate's heading and
+   then the framed studies in a row; App.tsx slides it sideways with the
+   scroll. The heading fills the first screen, so every frame enters from
+   the right; padding at the end lets the last one reach the middle. */
+.plate-gallery {
+  padding-top: clamp(40px, 6vw, 80px);
 }
-.frame:nth-child(3n + 2) {
-  margin-top: 64px;
+.gallery-stage {
+  position: relative;
+}
+.gallery-pin {
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
+  height: calc(100svh - 64px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.gallery-track {
+  --card: clamp(280px, 27vw, 380px);
+  --gap: clamp(28px, 3.6vw, 60px);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  width: max-content;
+  padding: 0 calc(50vw - var(--card) / 2) 0 var(--gutter);
+  will-change: transform;
+}
+.gallery-intro {
+  flex: 0 0 calc(100vw - var(--gutter) * 2 - var(--gap));
+  max-width: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 64px);
+  align-items: center;
+  padding-right: var(--gutter);
+}
+.gallery-intro .plate-head {
+  margin-bottom: 0;
+}
+.gallery-track .frame {
+  flex: 0 0 var(--card);
+}
+.gallery-progress {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: 22px;
+  height: 2px;
+  background: var(--rule);
+}
+.gallery-progress i {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  transform-origin: 0 50%;
 }
 .frame-inner {
   transform: rotate(var(--tilt, 0deg));
@@ -987,8 +1038,8 @@ em {
 .mat {
   display: grid;
   place-items: center;
-  aspect-ratio: 4 / 3;
-  padding: 18%;
+  aspect-ratio: 16 / 10;
+  padding: 9% 8%;
   background: #fbf8f2;
   border: 1px solid var(--rule);
   box-shadow:
@@ -1033,7 +1084,6 @@ em {
 .glyph {
   display: block;
   width: 100%;
-  max-width: 220px;
   height: auto;
   overflow: visible;
 }
@@ -1064,11 +1114,11 @@ em {
 }
 .g-text {
   fill: var(--graphite);
-  font-size: 12.5px;
+  font-size: 10px;
 }
 .g-num {
   font-family: var(--display) !important;
-  font-size: 22px;
+  font-size: 19px;
   stroke: none;
 }
 .g-ok {
@@ -1315,14 +1365,11 @@ em {
     max-width: 460px;
     margin: 0 auto;
   }
-  .gallery {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .gallery-intro {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .frame:nth-child(3n + 2) {
-    margin-top: 0;
-  }
-  .frame:nth-child(2n) {
-    margin-top: 48px;
+  .gallery-intro .scene-wrap-sm {
+    max-width: 260px;
   }
 }
 
@@ -1369,11 +1416,12 @@ em {
   .film-clock strong {
     font-size: 24px;
   }
-  .gallery {
-    grid-template-columns: 1fr;
+  .gallery-track {
+    --card: 78vw;
+    --gap: 22px;
   }
-  .frame:nth-child(2n) {
-    margin-top: 0;
+  .gallery-intro .scene-wrap-sm {
+    max-width: 200px;
   }
   .letters-grid {
     grid-template-columns: 1fr;

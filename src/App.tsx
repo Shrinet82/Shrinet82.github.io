@@ -1,6 +1,7 @@
-import { useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
-import { setupMotion } from './motion'
+import { glyphTimelines, setupMotion } from './motion'
 import Glyph from './Glyphs'
 import { DeskScene, EaselScene } from './Scenes'
 import { ConveyorPlayer, FPS, FRAMES, frameAt, GoldenPathPlayer, HarbourPlayer, LighthousePlayer, LoopPlayer } from './remotion/players'
@@ -345,11 +346,60 @@ function Tagline() {
   )
 }
 
+// Plate V is a pinned gallery walk. The section holds still under the top
+// bar while the scroll carries the wall of framed studies sideways, one pixel
+// across for each pixel down. Each diagram draws itself as its frame comes
+// to the middle, is complete by then, and undraws if you scroll back.
+const GALLERY_HOLD = 0.92
 function Studies() {
+  const [ref, p] = useScrollProgress<HTMLDivElement>()
+  const track = useRef<HTMLDivElement>(null)
+  const [geo, setGeo] = useState({ travel: 0, view: 1, centers: [] as number[] })
+  const [ready, setReady] = useState(0)
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      const t = track.current
+      if (!t) return
+      const view = t.parentElement!.clientWidth
+      const frames = [...t.querySelectorAll<HTMLElement>('.frame')]
+      setGeo({ travel: Math.max(0, t.scrollWidth - view), view, centers: frames.map((f) => f.offsetLeft + f.offsetWidth / 2) })
+    }
+    measure()
+    document.fonts?.ready.then(measure)
+    const onReady = () => setReady((n) => n + 1)
+    window.addEventListener('resize', measure)
+    window.addEventListener('glyphs-ready', onReady)
+    return () => {
+      window.removeEventListener('resize', measure)
+      window.removeEventListener('glyphs-ready', onReady)
+    }
+  }, [])
+
+  // the stage's height comes from the measured wall; triggers below it move
+  useEffect(() => {
+    ScrollTrigger.refresh()
+  }, [geo.travel])
+
+  const k = Math.min(1, p / GALLERY_HOLD)
+  const x = k * geo.travel
+
+  // each diagram's progress: 0 as its frame enters on the right, 1 by the time
+  // it reaches the middle of the wall
+  useLayoutEffect(() => {
+    track.current?.querySelectorAll<SVGSVGElement>('.frame .glyph').forEach((svg, i) => {
+      const c = (geo.centers[i] ?? 0) - x
+      const g = Math.min(1, Math.max(0, (geo.view * 0.96 - c) / (geo.view * 0.46)))
+      glyphTimelines.get(svg)?.progress(g)
+    })
+  }, [x, geo, ready])
+
   return (
-    <section className="plate" id="studies" data-plate="studies">
-      <div className="wrap">
-        <div className="plate-top">
+    <section className="plate plate-gallery" id="studies" data-plate="studies">
+      <div className="gallery-stage" ref={ref} style={{ height: `calc(100vh + ${Math.round(geo.travel / GALLERY_HOLD)}px)` }}>
+        <div className="gallery-pin">
+          <div className="gallery-track" ref={track} style={{ transform: `translate3d(${-x}px, 0, 0)` }}>
+            <div className="gallery-intro">
           <header className="plate-head">
             <span className="numeral" aria-hidden="true">
               V
@@ -363,8 +413,7 @@ function Studies() {
           <figure className="scene-wrap scene-wrap-sm">
             <EaselScene />
           </figure>
-        </div>
-        <div className="gallery">
+            </div>
           {elsewhere.map((p, i) => (
             <article key={p.title} className="frame">
               <div className="frame-inner" style={{ '--tilt': `${[-1.4, 0.9, -0.6, 1.2, -1, 0.7, -0.8][i % 7]}deg` } as React.CSSProperties}>
@@ -379,6 +428,10 @@ function Studies() {
               </div>
             </article>
           ))}
+          </div>
+          <div className="gallery-progress" aria-hidden="true">
+            <i style={{ transform: `scaleX(${k})` }} />
+          </div>
         </div>
       </div>
     </section>

@@ -264,9 +264,9 @@ export const filmSteps: Record<'golden' | 'conveyor' | 'lighthouse' | 'loop', Fi
     { at: 400, title: 'Verification', text: 'Key Vault hands it its secrets over CSI; OWASP ZAP and a smoke test check the live app.' },
   ],
   lighthouse: [
-    { at: 0, title: 'The glitch', text: 'A platform glitch keeps creating buckets and servers. One has SSH open to the world.' },
-    { at: 145, title: 'Mark', text: 'The Aegis lighthouse runs Cloud Custodian: everything that breaks a rule gets tagged.' },
-    { at: 232, title: 'Sweep', text: 'The sweep removes the strays and revokes the open SSH rule, with an audit trail.' },
+    { at: 0, title: 'The glitch', text: 'A platform glitch keeps creating buckets and servers, each one a CloudTrail event. One server has SSH open to the world.' },
+    { at: 145, title: 'Mark', text: 'EventBridge wakes the Aegis lighthouse. Cloud Custodian tags everything with no owner and revokes the open SSH rule at once.' },
+    { at: 232, title: 'Sweep', text: 'The grace period runs out and the sweep removes the strays. Every kill is logged on the Powerpipe board.' },
     { at: 290, title: 'Contained', text: 'Under 2 minutes, 0 manual steps. The on-call path would still be on step two.' },
   ],
   loop: [

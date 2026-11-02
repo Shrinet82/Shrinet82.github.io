@@ -26,7 +26,7 @@ const easel: Build = (svg) => {
   const bars = q(svg, '.paint-bar')
   const brush = one(svg, '.brush')
   const tl = gsap.timeline({
-    scrollTrigger: { trigger: svg, start: 'top 85%', end: 'bottom 45%', scrub: true },
+    scrollTrigger: { trigger: svg, start: 'top 90%', end: 'top 40%', scrub: true },
   })
   tl.fromTo(bars, { scaleY: 0, transformOrigin: '50% 100%' }, { scaleY: 1, duration: 0.3, stagger: 0.18, ease: 'back.out(2)' })
     .fromTo(line, { strokeDashoffset: len }, { strokeDashoffset: 0, duration: 1.6, ease: 'none' }, 0.2)

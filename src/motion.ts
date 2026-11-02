@@ -134,8 +134,8 @@ function tagline(root: HTMLElement) {
   )
 }
 
-// Framed studies: each diagram is drawn by the scroll as its frame comes up
-// the page, and undrawn as it goes back down.
+// Framed studies: each diagram is drawn by the scroll as its frame walks to
+// the middle of the pinned gallery, and undrawn on the way back.
 function glyphTimeline(svg: SVGSVGElement) {
   const tl = gsap.timeline({ paused: true, defaults: { ease: OUT } })
   const q = <T extends Element>(sel: string) => [...svg.querySelectorAll<T>(sel)]
@@ -218,19 +218,24 @@ function glyphTimeline(svg: SVGSVGElement) {
   return { tl, restore: () => restore.forEach((r) => r()) }
 }
 
+// Study diagrams, keyed by their svg. The pinned gallery (App.tsx) sets each
+// one's progress from where its frame sits on screen, in the same frame the
+// gallery moves.
+export const glyphTimelines = new Map<SVGSVGElement, gsap.core.Timeline>()
+
 function studies(root: HTMLElement): Cleanup {
   const cleanups: (() => void)[] = []
-  root.querySelectorAll<HTMLElement>('.frame').forEach((frame) => {
-    rise(frame.querySelector('.frame-inner')!, 30)
-    const svg = frame.querySelector<SVGSVGElement>('.glyph')
-    if (!svg) return
+  root.querySelectorAll<SVGSVGElement>('.frame .glyph').forEach((svg) => {
     const { tl, restore } = glyphTimeline(svg)
-    ScrollTrigger.create({ trigger: frame, start: 'top 85%', end: 'top 35%', scrub: true, animation: tl })
+    tl.pause().progress(0)
+    glyphTimelines.set(svg, tl)
     cleanups.push(() => {
+      glyphTimelines.delete(svg)
       tl.progress(1).kill()
       restore()
     })
   })
+  window.dispatchEvent(new Event('glyphs-ready'))
   return () => cleanups.forEach((c) => c())
 }
 

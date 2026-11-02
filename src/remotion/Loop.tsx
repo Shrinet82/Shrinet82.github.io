@@ -8,7 +8,9 @@ import { Box, C, Defs, Helm, WashLayer, clamp, ease, lerp, mono, prog, sans, ser
 // Slack Approve / PR / Reject, a GitOps pull request synced by ArgoCD, and
 // the agent's own OpenTelemetry spans, token usage included.
 
-export const LOOP = { height: 620, fps: 30, durationInFrames: 500 }
+export const LOOP = { height: 620, fps: 60, durationInFrames: 1000 }
+// 60 fps, timed in beats of 1/30 s: every panel reads the frame through this.
+const useBeat = () => useCurrentFrame() / 2
 export const LOOP_WORLD = 2040
 const ID = 'lp'
 const PANEL_W = 380
@@ -72,7 +74,7 @@ function PanelFrame({ i, active }: { i: number; active: number }) {
 }
 
 function Detect() {
-  const f = useCurrentFrame()
+  const f = useBeat()
   const x = panelX(0) + 30
   const logs = ['GET /score 200 41ms', 'GET /score 200 38ms', 'GET /score 504 30.0s', 'GET /score 200 44ms', 'GET /score 504 30.0s', 'GET /score 504 30.0s']
   const lens = interpolate(f, [52, 92], [0, 5], clamp)
@@ -80,13 +82,16 @@ function Detect() {
     <g>
       <Chart x={x} y={320} drawn={prog(f, 0, 45, ease.soft)} spike={1} tone={C.ink} />
       <g opacity={prog(f, 38, 46)} transform="translate(0 0)">
-        <rect x={x + 186} y={228} width={134} height={24} rx={12} fill={C.vermSoft} stroke={C.vermilion} strokeWidth={1.2} />
-        <text x={x + 198} y={244} fontFamily={mono} fontSize={13} fill={C.vermilion}>
+        <rect x={x + 172} y={228} width={148} height={24} rx={12} fill={C.vermSoft} stroke={C.vermilion} strokeWidth={1.2} />
+        <text x={x + 184} y={244} fontFamily={mono} fontSize={13} fill={C.vermilion}>
           ● 504 SLO breach
         </text>
       </g>
       <text x={x - 6} y={372} fontFamily={mono} fontSize={13} fill={C.ultra} opacity={prog(f, 46, 54)}>
-        signoz_search_logs "504"
+        mcp · signoz_search_logs "504"
+      </text>
+      <text x={x + 324} y={196} textAnchor="end" fontFamily={mono} fontSize={12} fill={C.graphite} opacity={prog(f, 92, 98)}>
+        k8s status: checked
       </text>
       {logs.map((l, k) => {
         const hit = l.includes('504') && lens >= k - 0.3
@@ -115,7 +120,7 @@ const TOOLS = [
   { label: 'cordon node', a: -18 },
 ]
 function Decide() {
-  const f = useCurrentFrame()
+  const f = useBeat()
   const cx = panelX(1) + PANEL_W / 2
   const cy = 360
   // the needle hunts, then settles on patch manifest with a damped swing
@@ -146,7 +151,10 @@ function Decide() {
       </g>
       <circle cx={cx} cy={cy} r={9} fill={C.ochreWash} stroke={C.ink} strokeWidth={1.6} />
       <text x={cx} y={cy + 40} textAnchor="middle" fontFamily={mono} fontSize={13} fill={C.graphite}>
-        llm · select one tool
+        gpt-5-mini · select one tool
+      </text>
+      <text x={cx} y={cy + 58} textAnchor="middle" fontFamily={mono} fontSize={11.5} fill={C.faint}>
+        azure openai
       </text>
       {/* confidence against the gate */}
       <g transform={`translate(${cx - 140} 452)`}>
@@ -168,7 +176,7 @@ function Decide() {
 }
 
 function Ask() {
-  const f = useCurrentFrame()
+  const f = useBeat()
   const cx = panelX(2) + PANEL_W / 2
   const card = prog(f, 6, 22, ease.out)
   const finger = prog(f, 40, 60, ease.inOut)
@@ -238,7 +246,7 @@ function Ask() {
 }
 
 function Fix() {
-  const f = useCurrentFrame()
+  const f = useBeat()
   const x0 = panelX(3) + 30
   const card = prog(f, 8, 52, ease.inOut)
   const merged = f >= 54
@@ -254,7 +262,10 @@ function Fix() {
         <circle key={dx} cx={x0 + dx} cy={260} r={dx === 250 ? (merged ? 10 : 7) : 7} fill={dx === 250 && merged ? C.sapWash : C.paper} stroke={C.ink} strokeWidth={1.6} />
       ))}
       <text x={x0 - 6} y={288} fontFamily={mono} fontSize={12.5} fill={C.graphite}>
-        main
+        main · flagship-gitops
+      </text>
+      <text x={x0 + 155} y={196} textAnchor="middle" fontFamily={mono} fontSize={12} fill={C.ultra} opacity={prog(f, 4, 12)}>
+        tier 2: pull request
       </text>
       <g transform={`translate(${bx} ${by - 44})`} opacity={merged ? 1 - prog(f, 54, 60) : card > 0 ? 1 : 0.9}>
         <rect x={-66} y={-30} width={132} height={60} rx={6} fill={C.paper} stroke={C.ultra} strokeWidth={1.6} />
@@ -303,7 +314,7 @@ const SPANS = [
   { name: 'gitops.pr', x: 0.76, w: 0.22 },
 ]
 function Verify() {
-  const f = useCurrentFrame()
+  const f = useBeat()
   const x0 = panelX(4) + 30
   const recover = prog(f, 0, 36, ease.inOut)
   return (
@@ -320,6 +331,11 @@ function Verify() {
             <text x={x0 + s.x * 300 + 4} y={399 + k * 30} fontFamily={mono} fontSize={12} fill={C.ink} opacity={grow}>
               {s.name}
             </text>
+            {k === 2 && (
+              <text x={x0 + 300} y={399 + k * 30} textAnchor="end" fontFamily={mono} fontSize={11.5} fill={C.ochre} opacity={grow}>
+                gen_ai tokens
+              </text>
+            )}
           </g>
         )
       })}
@@ -336,7 +352,7 @@ function Verify() {
 const SPOT = [{ cx: 500, cy: 320, rx: 260, ry: 250, fill: C.ultraWash, opacity: 0.18 }]
 
 export const Loop: React.FC<{ viewWidth: number }> = ({ viewWidth }) => {
-  const f = useCurrentFrame()
+  const f = useBeat()
   const stage = Math.min(4, Math.floor(f / STAGE))
   // hold on each panel, travel between them in the last fifth of a stage
   const centres = [0, 1, 2, 3, 4].map((i) => panelX(i) + PANEL_W / 2)
@@ -363,19 +379,19 @@ export const Loop: React.FC<{ viewWidth: number }> = ({ viewWidth }) => {
           {[0, 1, 2, 3, 4].map((i) => (
             <PanelFrame key={i} i={i} active={activity(i)} />
           ))}
-          <Sequence from={0} durationInFrames={STAGE * 5} layout="none" name="Detect">
+          <Sequence from={0} durationInFrames={STAGE * 10} layout="none" name="Detect">
             <Detect />
           </Sequence>
-          <Sequence from={STAGE} durationInFrames={STAGE * 4} layout="none" name="Decide">
+          <Sequence from={STAGE * 2} durationInFrames={STAGE * 8} layout="none" name="Decide">
             <Decide />
           </Sequence>
-          <Sequence from={STAGE * 2} durationInFrames={STAGE * 3} layout="none" name="Ask">
+          <Sequence from={STAGE * 4} durationInFrames={STAGE * 6} layout="none" name="Ask">
             <Ask />
           </Sequence>
-          <Sequence from={STAGE * 3} durationInFrames={STAGE * 2} layout="none" name="Fix">
+          <Sequence from={STAGE * 6} durationInFrames={STAGE * 4} layout="none" name="Fix">
             <Fix />
           </Sequence>
-          <Sequence from={STAGE * 4} durationInFrames={STAGE} layout="none" name="Verify">
+          <Sequence from={STAGE * 8} durationInFrames={STAGE * 2} layout="none" name="Verify">
             <Verify />
           </Sequence>
         </g>
