@@ -1,4 +1,5 @@
-import { Easing, interpolate } from 'remotion'
+import { useMemo } from 'react'
+import { AbsoluteFill, Easing, Img, interpolate } from 'remotion'
 import { loadFont as loadFraunces } from '@remotion/google-fonts/Fraunces'
 import { loadFont as loadPlexMono } from '@remotion/google-fonts/IBMPlexMono'
 import { loadFont as loadInstrument } from '@remotion/google-fonts/InstrumentSans'
@@ -53,6 +54,43 @@ export const osc = (f: number, period: number, phase = 0) => Math.sin((f / perio
 // frames, never smoothly.
 export const boilSeed = (f: number) => 3 + (Math.floor(f / 4) % 3)
 
+function WashFilter({ id }: { id: string }) {
+  return (
+    <filter id={id} x="-30%" y="-30%" width="160%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.011" numOctaves="2" seed="7" result="n" />
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="46" result="d" />
+      <feGaussianBlur in="d" stdDeviation="7" />
+    </filter>
+  )
+}
+
+// A wash that sits still behind a scene. It is baked into an <img>, which the
+// browser rasterizes once and caches: drawn inline, the filter re-ran on every
+// frame whenever anything on top of it moved. The camera pans the image.
+export type Blob = { cx: number; cy: number; rx: number; ry: number; fill: string; opacity: number }
+
+export function WashLayer({ blobs, world, viewWidth, camera = 0 }: { blobs: Blob[]; world: { w: number; h: number }; viewWidth: number; camera?: number }) {
+  const src = useMemo(() => {
+    const ellipses = blobs.map((b) => `<ellipse cx='${b.cx}' cy='${b.cy}' rx='${b.rx}' ry='${b.ry}' fill='${b.fill}' opacity='${b.opacity}'/>`).join('')
+    const svg =
+      `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${world.w} ${world.h}' width='${world.w}' height='${world.h}'>` +
+      `<filter id='w' x='-30%' y='-30%' width='160%' height='160%'>` +
+      `<feTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='2' seed='7' result='n'/>` +
+      `<feDisplacementMap in='SourceGraphic' in2='n' scale='46' result='d'/><feGaussianBlur in='d' stdDeviation='7'/></filter>` +
+      `<g filter='url(#w)'>${ellipses}</g></svg>`
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+  }, [blobs, world.w, world.h])
+  return (
+    <AbsoluteFill style={{ overflow: 'hidden' }}>
+      <Img
+        src={src}
+        alt=""
+        style={{ position: 'absolute', top: 0, height: '100%', width: `${(world.w / viewWidth) * 100}%`, left: `${(camera / viewWidth) * 100}%`, maxWidth: 'none' }}
+      />
+    </AbsoluteFill>
+  )
+}
+
 export function Defs({ id, f, deckle }: { id: string; f: number; deckle?: { w: number; h: number } }) {
   return (
     <defs>
@@ -68,15 +106,13 @@ export function Defs({ id, f, deckle }: { id: string; f: number; deckle?: { w: n
           </mask>
         </>
       )}
+      {/* Few octaves on purpose: scrolling repaints these filters every
+          frame, and finer noise is lost under the displacement and blur. */}
       <filter id={`${id}-rough`} x="-5%" y="-5%" width="110%" height="110%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed={boilSeed(f)} />
+        <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="1" seed={boilSeed(f)} />
         <feDisplacementMap in="SourceGraphic" scale="2.4" />
       </filter>
-      <filter id={`${id}-wash`} x="-30%" y="-30%" width="160%" height="160%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.011" numOctaves="3" seed="7" result="n" />
-        <feDisplacementMap in="SourceGraphic" in2="n" scale="46" result="d" />
-        <feGaussianBlur in="d" stdDeviation="7" />
-      </filter>
+      <WashFilter id={`${id}-wash`} />
       <pattern id={`${id}-hatch`} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(40)">
         <line x1="0" y1="0" x2="0" y2="5" stroke={C.ink} strokeWidth="0.9" opacity="0.55" />
       </pattern>

@@ -1,5 +1,5 @@
 import { AbsoluteFill, Interactive, interpolate, useCurrentFrame } from 'remotion'
-import { C, Defs, clamp, ease, lerp, mono, osc, prog, seaPath, serif, serifItalic } from './kit'
+import { C, Defs, WashLayer, clamp, ease, lerp, mono, osc, prog, seaPath, serif, serifItalic } from './kit'
 
 // Plate III (Project Aegis). Scroll-scrubbed. A platform glitch keeps
 // stacking buckets and servers on the quay at night, one of them with SSH
@@ -72,7 +72,9 @@ function Server({ f, lock }: { f: number; lock: number }) {
   )
 }
 
-export const Lighthouse: React.FC<{ narrow?: boolean }> = ({ narrow = false }) => {
+const NIGHT = [{ cx: 480, cy: 220, rx: 520, ry: 210, fill: C.night, opacity: 0.72 }]
+
+export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({ narrow = false, viewWidth = LIGHTHOUSE_NARROW.width }) => {
   const f = useCurrentFrame()
   const lampOn = prog(f, 150, 164, ease.out)
   // beam angle: points at the quay's right end, sweeps to its left end, returns to idle
@@ -86,20 +88,18 @@ export const Lighthouse: React.FC<{ narrow?: boolean }> = ({ narrow = false }) =
   const beamRad = (beamAngle * Math.PI) / 180
   // narrow camera: the quay, the lighthouse lighting up, then along the beam
   const focus = interpolate(f, [0, 140, 166, 180, 222, 262, 300], [360, 360, 820, 640, 250, 300, 420], { ...clamp, easing: ease.inOut })
-  const camX = narrow ? Math.min(0, Math.max(600 - 1000, 300 - focus)) : 0
+  const camX = narrow ? Math.min(0, Math.max(viewWidth - 1000, viewWidth / 2 - focus)) : 0
   const chipW = narrow ? 84 : 88
   const perRow = narrow ? 4 : 7
+  const viewBox = narrow ? `0 0 ${viewWidth} ${LIGHTHOUSE_NARROW.height}` : '0 0 1000 600'
 
   return (
     <AbsoluteFill>
-      <svg viewBox={narrow ? '0 0 600 700' : '0 0 1000 600'} width="100%" height="100%">
+      {/* night over the quay */}
+      <WashLayer blobs={NIGHT} world={{ w: 1000, h: narrow ? LIGHTHOUSE_NARROW.height : 600 }} viewWidth={narrow ? viewWidth : 1000} camera={camX} />
+      <svg viewBox={viewBox} width="100%" height="100%" style={{ position: 'absolute' }}>
         <Defs id={ID} f={f} />
         <g transform={`translate(${camX} 0)`}>
-
-        {/* night over the quay */}
-        <g filter={`url(#${ID}-wash)`}>
-          <ellipse cx={480} cy={220} rx={520} ry={210} fill={C.night} opacity={0.72} />
-        </g>
         {[
           [120, 70],
           [330, 44],

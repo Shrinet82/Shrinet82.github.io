@@ -26,16 +26,19 @@ const quiet = {
   acknowledgeRemotionLicense: true,
 } as const
 
-function useNarrow() {
-  const [narrow, setNarrow] = useState(() => window.matchMedia('(max-width: 900px)').matches)
+function useMedia(query: string) {
+  const [match, setMatch] = useState(() => window.matchMedia(query).matches)
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 900px)')
-    const on = () => setNarrow(mq.matches)
+    const mq = window.matchMedia(query)
+    const on = () => setMatch(mq.matches)
     mq.addEventListener('change', on)
     return () => mq.removeEventListener('change', on)
-  }, [])
-  return narrow
+  }, [query])
+  return match
 }
+const useNarrow = () => useMedia('(max-width: 900px)')
+// Phones get a tighter camera on the wide films so their labels stay legible.
+const usePhone = () => useMedia('(max-width: 560px)')
 
 // Hero loop: plays while on screen, pauses when scrolled away. With reduced
 // motion it holds a calm frame with all seven containers aboard.
@@ -132,7 +135,8 @@ export function GoldenPathPlayer() {
 
 export function ConveyorPlayer() {
   const narrow = useNarrow()
-  const width = narrow ? 640 : WORLD
+  const phone = usePhone()
+  const width = phone ? 440 : narrow ? 640 : WORLD
   return (
     <Scrubbed
       name="conveyor"
@@ -148,7 +152,8 @@ export function ConveyorPlayer() {
 
 export function LighthousePlayer() {
   const narrow = useNarrow()
-  const size = narrow ? LIGHTHOUSE_NARROW : LIGHTHOUSE
+  const phone = usePhone()
+  const size = narrow ? { ...LIGHTHOUSE_NARROW, width: phone ? 440 : LIGHTHOUSE_NARROW.width } : LIGHTHOUSE
   return (
     <Scrubbed
       name="lighthouse"
@@ -157,7 +162,7 @@ export function LighthousePlayer() {
       width={size.width}
       height={size.height}
       frames={LIGHTHOUSE.durationInFrames}
-      inputProps={{ narrow }}
+      inputProps={{ narrow, viewWidth: size.width }}
     />
   )
 }

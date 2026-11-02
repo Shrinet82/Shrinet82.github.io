@@ -55,7 +55,9 @@ body {
   overflow-x: clip;
 }
 
-/* Paper grain, fixed over everything, never intercepting input. */
+/* Paper grain, fixed over everything, never intercepting input. It sits on
+   its own layer and blends normally: a full-screen multiply forced the
+   browser to recomposite the whole page on every scrolled frame. */
 body::after {
   content: '';
   position: fixed;
@@ -63,7 +65,7 @@ body::after {
   z-index: 60;
   pointer-events: none;
   opacity: 0.38;
-  mix-blend-mode: multiply;
+  transform: translateZ(0);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.4 0 0 0 0 0.33 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -312,10 +314,8 @@ em {
     box-shadow 250ms ease;
 }
 .topbar.scrolled {
-  background: rgba(243, 238, 228, 0.9);
+  background: rgba(243, 238, 228, 0.96);
   box-shadow: 0 1px 0 var(--rule);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 .signature {
   font-family: var(--display);
@@ -1174,7 +1174,10 @@ em {
   .letters-scene {
     grid-column: 1 / -1;
   }
+  /* A grid item with auto margins shrinks to its content, and the player
+     inside sizes itself from its parent, so give it a width to fill. */
   .hero-art {
+    width: 100%;
     max-width: 460px;
     margin: 0 auto;
   }

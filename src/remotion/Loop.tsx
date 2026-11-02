@@ -1,5 +1,5 @@
 import { AbsoluteFill, Sequence, interpolate, useCurrentFrame } from 'remotion'
-import { Box, C, Defs, Helm, clamp, ease, lerp, mono, prog, sans, serif } from './kit'
+import { Box, C, Defs, Helm, WashLayer, clamp, ease, lerp, mono, prog, sans, serif } from './kit'
 
 // Plate IV (Aegis Observe). The SRE loop as a five-panel film, scrubbed by
 // the pinned scroll: the camera pans from panel to panel while each panel
@@ -333,6 +333,8 @@ function Verify() {
   )
 }
 
+const SPOT = [{ cx: 500, cy: 320, rx: 260, ry: 250, fill: C.ultraWash, opacity: 0.18 }]
+
 export const Loop: React.FC<{ viewWidth: number }> = ({ viewWidth }) => {
   const f = useCurrentFrame()
   const stage = Math.min(4, Math.floor(f / STAGE))
@@ -350,12 +352,11 @@ export const Loop: React.FC<{ viewWidth: number }> = ({ viewWidth }) => {
 
   return (
     <AbsoluteFill>
-      <svg viewBox={`0 0 ${viewWidth} 620`} width="100%" height="100%" style={{ overflow: 'hidden' }}>
+      {/* the wash follows the panel in focus; it is one blob, panned */}
+      <WashLayer blobs={SPOT} world={{ w: 1000, h: 620 }} viewWidth={viewWidth} camera={camera + focus - 500} />
+      <svg viewBox={`0 0 ${viewWidth} 620`} width="100%" height="100%" style={{ overflow: 'hidden', position: 'absolute' }}>
         <Defs id={ID} f={f} />
         <g transform={`translate(${camera} 0)`}>
-          <g filter={`url(#${ID}-wash)`}>
-            <ellipse cx={focus} cy={320} rx={260} ry={250} fill={C.ultraWash} opacity={0.18} />
-          </g>
           {/* the thread that joins the panels: the loop itself */}
           <path d={`M ${panelX(0) + PANEL_W} 314 L ${panelX(4)} 314`} stroke={C.rule} strokeWidth={2} strokeDasharray="2 6" />
           <line x1={panelX(0) + PANEL_W} y1={314} x2={lerp(panelX(0) + PANEL_W, panelX(4), prog(f, 90, 420))} y2={314} stroke={C.ultra} strokeWidth={2} />

@@ -100,14 +100,14 @@ function plates(root: HTMLElement) {
     if (numeral)
       gsap.fromTo(numeral, { yPercent: 40 }, { yPercent: -40, ease: 'none', scrollTrigger: { trigger: plate, start: 'top bottom', end: 'bottom top', scrub: true } })
 
+    // Opacity only: a scrubbed blur on every word repaints the verse each frame.
     const words = plate.querySelectorAll('.verse .vw')
     if (words.length)
       gsap.fromTo(
         words,
-        { opacity: 0.1, filter: 'blur(4px)' },
+        { opacity: 0.1 },
         {
           opacity: 1,
-          filter: 'blur(0px)',
           ease: 'none',
           stagger: 0.12,
           scrollTrigger: { trigger: plate.querySelector('.verse'), start: 'top 85%', end: 'bottom 45%', scrub: 0.6 },
@@ -122,11 +122,11 @@ function plates(root: HTMLElement) {
   })
 
   const inks = root.querySelectorAll('.ink-in')
-  gsap.set(inks, { opacity: 0, y: 16, filter: 'blur(6px)' })
+  gsap.set(inks, { opacity: 0, y: 16 })
   ScrollTrigger.batch(inks, {
     start: 'top 88%',
     once: true,
-    onEnter: (b) => gsap.to(b, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1, ease: OUT, stagger: 0.08 }),
+    onEnter: (b) => gsap.to(b, { opacity: 1, y: 0, duration: 1, ease: OUT, stagger: 0.08 }),
   })
 }
 
@@ -137,8 +137,12 @@ function scrubbed(root: HTMLElement, name: keyof typeof SCRUBS, { pin }: Opts, o
   const stage = root.querySelector<HTMLElement>(selector)
   if (!stage) return
   const last = frames - 1
+  let shown = -1
   const update = (p: number) => {
-    players[name]?.seekTo(Math.round(p * last))
+    // Scroll fires far more often than the film has frames; only re-render
+    // the composition when the frame actually changes.
+    const frame = Math.round(p * last)
+    if (frame !== shown) players[name]?.seekTo((shown = frame))
     onProgress?.(p)
   }
   ScrollTrigger.create(

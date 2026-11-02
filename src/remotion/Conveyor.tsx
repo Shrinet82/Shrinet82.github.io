@@ -1,6 +1,6 @@
 import { AbsoluteFill, Interactive, Sequence, interpolate, useCurrentFrame } from 'remotion'
 import { pipeline } from '../content'
-import { Box, C, Defs, Helm, clamp, ease, lerp, mono, osc, prog, seaPath, serif } from './kit'
+import { Box, C, Defs, Helm, WashLayer, clamp, ease, lerp, mono, osc, prog, seaPath, serif } from './kit'
 
 // Plate II (zero-trust DevSecOps). Scroll-scrubbed: the scroll position is
 // the frame. One Docker image rides the belt through the gates. Security
@@ -237,6 +237,11 @@ function Verification() {
   )
 }
 
+const WASHES = [
+  { cx: 560, cy: 220, rx: 520, ry: 150, fill: C.ochreWash, opacity: 0.16 },
+  { cx: 1390, cy: 400, rx: 210, ry: 70, fill: C.ultraWash, opacity: 0.35 },
+]
+
 export const Conveyor: React.FC<{ viewWidth: number }> = ({ viewWidth }) => {
   const f = useCurrentFrame()
   const cx = cxAt(f)
@@ -255,14 +260,11 @@ export const Conveyor: React.FC<{ viewWidth: number }> = ({ viewWidth }) => {
 
   return (
     <AbsoluteFill>
-      <svg viewBox={`0 0 ${viewWidth} 540`} width="100%" height="100%" style={{ overflow: 'hidden' }}>
+      {/* washes: the shop floor warm, the harbour cool */}
+      <WashLayer blobs={WASHES} world={{ w: WORLD, h: 540 }} viewWidth={viewWidth} camera={camera} />
+      <svg viewBox={`0 0 ${viewWidth} 540`} width="100%" height="100%" style={{ overflow: 'hidden', position: 'absolute' }}>
         <Defs id={ID} f={f} />
         <g transform={`translate(${camera} 0)`}>
-          {/* washes: the shop floor warm, the harbour cool */}
-          <g filter={`url(#${ID}-wash)`}>
-            <ellipse cx={560} cy={220} rx={520} ry={150} fill={C.ochreWash} opacity={0.16} />
-            <ellipse cx={1390} cy={400} rx={210} ry={70} fill={C.ultraWash} opacity={0.35} />
-          </g>
 
           {/* harbour water */}
           <g clipPath={`url(#${ID}-harbour)`}>

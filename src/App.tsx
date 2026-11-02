@@ -45,11 +45,11 @@ function Defs() {
   return (
     <svg className="defs" aria-hidden="true" focusable="false">
       <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3" />
+        <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="3" />
         <feDisplacementMap in="SourceGraphic" scale="3" />
       </filter>
       <filter id="wash" x="-30%" y="-30%" width="160%" height="160%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="3" seed="8" result="n" />
+        <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="8" result="n" />
         <feDisplacementMap in="SourceGraphic" in2="n" scale="46" result="d" />
         <feGaussianBlur in="d" stdDeviation="7" />
       </filter>
