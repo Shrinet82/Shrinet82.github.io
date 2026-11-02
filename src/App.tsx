@@ -1,463 +1,384 @@
-import { useRef } from 'react'
-import { useGSAP } from '@gsap/react'
-import { setupMotion } from './motion'
-import Glyph from './Glyphs'
-import { DeskScene, EaselScene } from './Scenes'
-import { ConveyorPlayer, GoldenPathPlayer, HarbourPlayer, LighthousePlayer, LoopPlayer } from './remotion/players'
-import {
-  awards,
-  certs,
-  education,
-  elsewhere,
-  pipeline,
-  plates,
-  profile,
-  provision,
-  repos,
-  stack,
-  upstream,
-  verses,
-} from './content'
+import { useEffect, useRef, type ComponentType } from 'react'
+import { certs, education, experience, features, headline, lab, nav, profile, stack, stats, upstream, wins, type Feature } from './content'
+import { onScroll, useScrollProgress } from './scroll'
+import { SceneFrame, stepAt } from './Scene'
+import { Ship } from './remotion/Ship'
+import { Observe } from './remotion/Observe'
+import { Opsie } from './remotion/Opsie'
+import { Govern } from './remotion/Govern'
+import { Gates } from './remotion/Gates'
 
-const ext = (href: string) => (href.startsWith('http') ? { target: '_blank', rel: 'noreferrer' } : {})
-
-const Arrow = () => (
-  <svg className="arrow" viewBox="0 0 16 16" aria-hidden="true">
-    <path d="M4.5 11.5l7-7M6 4.5h5.5V10" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-  </svg>
-)
-
-function Links({ links }: { links: { label: string; href: string }[] }) {
-  return (
-    <div className="links">
-      {links.map((l) => (
-        <a key={l.href} href={l.href} {...ext(l.href)}>
-          {l.label} <Arrow />
-        </a>
-      ))}
-    </div>
-  )
+const SCENES: Record<Feature['scene'], { component: ComponentType; label: string }> = {
+  observe: { component: Observe, label: 'Animation: a 504 latency spike in SigNoz; the agent proposes a fix, a human clicks PR in Slack, ArgoCD syncs and latency recovers.' },
+  opsie: { component: Opsie, label: 'Animation: a Backstage form provisions an S3 bucket through Terraform; bars compare 45, 60 and 30 minutes by hand with 8, 12 and 10 minutes on OPSIE.' },
+  govern: { component: Govern, label: 'Animation: untagged buckets and instances multiply, a Cloud Custodian policy marks them and a sweep removes them; time to fix drops from 4–24 hours to under 2 minutes.' },
+  gates: { component: Gates, label: 'Animation: five pipeline stages run in turn; Trivy flags two critical CVEs which are patched, and the clock stops at 32 minutes 52 seconds.' },
 }
 
-// Shared SVG filters: a pen wobble for ink lines and a bleeding edge for
-// watercolour washes.
-function Defs() {
-  return (
-    <svg className="defs" aria-hidden="true" focusable="false">
-      <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="3" />
-        <feDisplacementMap in="SourceGraphic" scale="3" />
-      </filter>
-      <filter id="wash" x="-30%" y="-30%" width="160%" height="160%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="8" result="n" />
-        <feDisplacementMap in="SourceGraphic" in2="n" scale="46" result="d" />
-        <feGaussianBlur in="d" stdDeviation="7" />
-      </filter>
-    </svg>
+function Header() {
+  const bar = useRef<HTMLDivElement>(null)
+  const head = useRef<HTMLElement>(null)
+  useEffect(
+    () =>
+      onScroll((y) => {
+        const max = document.documentElement.scrollHeight - window.innerHeight
+        bar.current?.style.setProperty('transform', `scaleX(${max > 0 ? y / max : 0})`)
+        head.current?.classList.toggle('scrolled', y > 8)
+      }),
+    [],
   )
-}
-
-function Verse({ lines }: { lines: string[] }) {
   return (
-    <blockquote className="verse">
-      {lines.map((l, i) => (
-        <span key={i} className="verse-line">
-          {l.split(' ').map((w, j) => (
-            <span key={j} className="vw">
-              {w}{' '}
-            </span>
-          ))}
-        </span>
-      ))}
-    </blockquote>
-  )
-}
-
-function PlateHead({
-  roman,
-  label,
-  title,
-  verse,
-  scene,
-}: {
-  roman: string
-  label: string
-  title: string
-  verse: string[]
-  scene?: React.ReactNode
-}) {
-  return (
-    <div className={`plate-top ${scene ? '' : 'plate-top-solo'}`}>
-      <header className="plate-head">
-        <span className="numeral" aria-hidden="true">
-          {roman}
-        </span>
-        <p className="plate-label mono ink-in">
-          Plate {roman} · {label}
-        </p>
-        <h2 className="plate-title ink-in">{title}</h2>
-        <Verse lines={verse} />
-      </header>
-      {scene && <figure className="scene-wrap">{scene}</figure>}
-    </div>
-  )
-}
-
-function Topbar() {
-  return (
-    <header className="topbar">
-      <a href="#top" className="signature">
-        Shashwat <em>Pratap Singh</em>
+    <header className="topbar" ref={head}>
+      <a className="brand" href="#top" aria-label="Back to top">
+        <span className="brand-mark">~/</span>
+        {profile.handle}
       </a>
-      <nav className="plates-nav" aria-label="Plates">
-        {plates.map((p) => (
-          <a key={p.id} href={`#${p.id}`} data-nav={p.id} title={p.label}>
-            {p.roman}
+      <nav aria-label="Sections">
+        {nav.map((n) => (
+          <a key={n.href} href={n.href}>
+            {n.label}
           </a>
         ))}
       </nav>
-      <span className="now mono" aria-hidden="true" />
-      <a href={`mailto:${profile.email}`} className="write mono">
-        Write to me
+      <a className="status" href="#contact">
+        <span className="dot" /> <span className="status-text">Open for work</span>
       </a>
+      <div className="readout" ref={bar} aria-hidden />
     </header>
   )
 }
 
 function Hero() {
+  const [ref, p] = useScrollProgress<HTMLElement>()
   return (
-    <section className="hero" id="top" data-plate="top">
-      <div className="wrap hero-grid">
+    <section className="hero" id="top" ref={ref}>
+      <div className="hero-stage">
         <div className="hero-copy">
-          <p className="kicker mono hero-in">Painter · poet · platform engineer</p>
-          <h1 className="hero-title">
-            Some people write poems about 3am. <em>I make sure nobody has to be awake for it.</em>
+          <p className="eyebrow">
+            <span className="dot" /> {profile.role} · {profile.location}
+          </p>
+          <h1>
+            {headline.lines.map((l, i) => (
+              <span key={l} className={i ? 'hl' : undefined}>
+                {l}
+              </span>
+            ))}
           </h1>
-          <p className="hero-dek hero-in">
-            I&apos;m {profile.name}. I paint, I write, and since January 2025 I&apos;ve worked independently on
-            internal platforms, GitOps delivery and policy guardrails for 4 engineering teams. This sketchbook holds
-            the engineering, including an SRE agent that took 1st place at the Agents of SigNoz hackathon.
-          </p>
-          <div className="actions hero-in">
-            <a className="btn btn-ink" href="#provision">
-              Open the sketchbook
+          <p className="lede">{headline.sub}</p>
+          <div className="ctas">
+            <a className="btn primary" href="#work">
+              See it run
             </a>
-            <a className="btn btn-line" href={`mailto:${profile.email}`}>
-              Write to me
+            <a className="btn" href={`mailto:${profile.email}`}>
+              Page me
             </a>
           </div>
-        </div>
-        <figure className="hero-art">
-          <HarbourPlayer />
-        </figure>
-      </div>
-    </section>
-  )
-}
-
-function Provision() {
-  return (
-    <section className="plate" id="provision" data-plate="provision">
-      <div className="wrap">
-        <PlateHead roman="I" label="Provision" title="Infrastructure used to be a ticket." verse={verses.provision} />
-        <div className="film">
-          <GoldenPathPlayer />
-        </div>
-        <div className="two facts">
-          <p className="prose">{provision.newWay}</p>
-          <Links links={repos.opsie} />
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function Ship() {
-  return (
-    <section className="plate" id="ship" data-plate="ship">
-      <div className="wrap">
-        <PlateHead roman="II" label="Ship" title="Every image rides through five checks." verse={verses.ship} />
-      </div>
-      <div className="wrap stage" data-stage="ship">
-        <div className="conveyor">
-          <ConveyorPlayer />
-        </div>
-        <div className="ship-foot">
-          <p className="big-num">
-            <span className="mono">commit → verified deploy</span>
-            <strong className="ship-total">{pipeline.total}</strong>
+          <p className="hint" style={{ opacity: Math.max(0, 1 - p * 4) }}>
+            <span className="mouse" /> scroll to deploy
           </p>
-          <div>
-            <p className="prose">
-              A zero-trust Azure pipeline for AKS: secrets scan, IaC scan, image scan with SBOM, then DAST against the
-              running app. Trivy found two critical CVEs; both were fixed with dependency upgrades and a hardened
-              rebuild. Secrets arrive at runtime from Key Vault CSI.
-            </p>
-            <Links links={repos.devsecops} />
-          </div>
+        </div>
+        <div className="canvas hero-canvas">
+          <SceneFrame component={Ship} progress={p} label="Animation: a git push travels lint, scan, build, sign and deploy stages, then rolls out pod by pod to a Kubernetes cluster as traffic shifts from v1 to v2 with zero downtime." />
         </div>
       </div>
     </section>
   )
 }
 
-function Govern() {
+function Stats() {
   return (
-    <section className="plate" id="govern" data-plate="govern">
-      <div className="wrap">
-        <PlateHead roman="III" label="Govern" title="Then a glitch started spawning buckets." verse={verses.govern} />
-        <div className="film">
-          <LighthousePlayer />
+    <section className="stats" aria-label="Highlights">
+      {stats.map((s) => (
+        <div className="stat" key={s.label}>
+          <strong>{s.big}</strong>
+          <span>{s.label}</span>
+          <small>{s.note}</small>
         </div>
-        <div className="two facts">
-          <p className="prose">
-            <strong className="fact">Mark, then sweep.</strong> Cloud Custodian policies run across AWS and Azure:
-            resources that break a rule are tagged, then removed, and rules like SSH open to 0.0.0.0/0 are revoked with
-            an audit trail.
-          </p>
-          <div>
-            <p className="prose">
-              <strong className="fact">0 manual steps</strong> per incident, down from seven. The runaway-resource
-              incident went from 4 to 24 hours to under 2 minutes.
-            </p>
-            <Links links={repos.aegis} />
-          </div>
-        </div>
-      </div>
+      ))}
     </section>
   )
 }
 
-function Heal() {
-  return (
-    <section className="plate" id="heal" data-plate="heal">
-      <div className="wrap">
-        <PlateHead roman="IV" label="Heal" title="So I taught the cluster to open its own PRs." verse={verses.heal} />
-      </div>
-      <div className="wrap stage" data-stage="heal">
-        <div className="film film-wide">
-          <LoopPlayer />
-        </div>
-        <div className="heal-foot">
-          <p className="prose">
-            Aegis Observe: rule-based signal detection over SigNoz, an LLM that selects one remediation, a human who
-            keeps the veto in Slack, and GitOps that keeps the record. 1st place at the Agents of SigNoz hackathon.
-          </p>
-          <Links links={repos.observe} />
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function Tagline() {
-  const text = 'Good infrastructure is boring to operate. Getting it there is the art.'
-  return (
-    <section className="tagline" aria-label={text}>
-      <p className="wrap tagline-text" aria-hidden="true">
-        {text.split(' ').map((w, i) => (
-          <span key={i} className="tw">
-            {w}{' '}
-          </span>
+function FeatureScene({ f }: { f: Feature }) {
+  const [ref, p] = useScrollProgress<HTMLElement>()
+  const n = f.steps.length
+  const active = stepAt(p, n)
+  const local = p * n - active
+  const scene = SCENES[f.scene]
+  const meta = (
+    <>
+      <ul className="chips" aria-label="Stack">
+        {f.stack.map((s) => (
+          <li key={s}>{s}</li>
+        ))}
+      </ul>
+      <p className="links">
+        {f.links.map((l) => (
+          <a key={l.href} href={l.href} target="_blank" rel="noreferrer">
+            {l.label} ↗
+          </a>
         ))}
       </p>
-    </section>
+    </>
   )
-}
-
-function Studies() {
   return (
-    <section className="plate" id="studies" data-plate="studies">
-      <div className="wrap">
-        <div className="plate-top">
-          <header className="plate-head">
-            <span className="numeral" aria-hidden="true">
-              V
-            </span>
-            <p className="plate-label mono ink-in">Plate V · Studies</p>
-            <h2 className="plate-title ink-in">Smaller studies, same hand.</h2>
-            <p className="prose lead ink-in">
-              Model serving, security streams, and one farm that pages you before the plants die.
-            </p>
-          </header>
-          <figure className="scene-wrap scene-wrap-sm">
-            <EaselScene />
-          </figure>
-        </div>
-        <div className="gallery">
-          {elsewhere.map((p, i) => (
-            <article key={p.title} className="frame" data-speed={[0.9, 1.15, 1, 1.2, 0.95, 1.1, 1.05][i % 7]}>
-              <div className="frame-inner" style={{ '--tilt': `${[-1.4, 0.9, -0.6, 1.2, -1, 0.7, -0.8][i % 7]}deg` } as React.CSSProperties}>
-                <div className="mat">{p.glyph && <Glyph kind={p.glyph} />}</div>
-                {p.caption && <span className="fig-cap">{p.caption}</span>}
-                <div className="label">
-                  <h3>{p.title}</h3>
-                  <p className="mono medium">{p.kind}</p>
-                  <p className="label-line">{p.line}</p>
-                  <Links links={p.links} />
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function Catalogue() {
-  return (
-    <section className="plate" id="catalogue" data-plate="catalogue">
-      <div className="wrap">
-        <header className="plate-head">
-          <span className="numeral" aria-hidden="true">
-            VI
-          </span>
-          <p className="plate-label mono ink-in">Plate VI · Catalogue</p>
-          <h2 className="plate-title ink-in">Collections, honours, materials.</h2>
-          <p className="prose lead ink-in">An artist&apos;s CV, kept by an engineer.</p>
-        </header>
-        <div className="cv">
-          <div className="cv-block ink-in">
-            <h3 className="cv-h mono">Collections · merged upstream</h3>
-            <ul>
-              {upstream.slice(0, 2).map((u) => (
-                <li key={u.where}>
-                  <a href={u.href} {...ext(u.href)}>
-                    <strong>{u.where}</strong> <span className="mono tag">{u.state}</span>
-                  </a>
-                  <span>{u.what}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="cv-block ink-in">
-            <h3 className="cv-h mono">Publications</h3>
-            <ul>
-              {upstream.slice(2).map((u) => (
-                <li key={u.where}>
-                  <a href={u.href} {...ext(u.href)}>
-                    <strong>{u.where}</strong> <Arrow />
-                  </a>
-                  <span>{u.what}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="cv-block ink-in">
-            <h3 className="cv-h mono">Honours</h3>
-            <ul>
-              {awards.map((a) => (
-                <li key={a.what}>
-                  <strong>{a.what}</strong>
-                  <span>{a.note}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="cv-block ink-in">
-            <h3 className="cv-h mono">Training</h3>
-            <ul className="compact">
-              {certs.map((c) => (
-                <li key={c}>{c}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="cv-block cv-wide ink-in">
-            <h3 className="cv-h mono">Materials</h3>
-            <dl>
-              {stack.map(([k, v]) => (
-                <div key={k}>
-                  <dt className="mono">{k}</dt>
-                  <dd>{v}</dd>
-                </div>
-              ))}
-              <div>
-                <dt className="mono">Schooling</dt>
-                <dd>{education}</dd>
-              </div>
-            </dl>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function Letters() {
-  return (
-    <footer className="plate letters" id="contact" data-plate="contact">
-      <div className="wrap">
-        <p className="plate-label mono ink-in">Plate VII · Letters</p>
-        <h2 className="letters-title">
-          Hand me{' '}
-          <span className="underlined">
-            the pager.
-            <svg className="brush-under" viewBox="0 0 400 30" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M6 20 C 90 8, 210 26, 394 12" filter="url(#rough)" />
-            </svg>
-          </span>
-        </h2>
-        <div className="letters-grid">
-
-          <figure className="portrait ink-in">
-            <img src="/assets/profile.jpg" alt="Shashwat Pratap Singh" width="200" height="250" loading="lazy" />
-          </figure>
-          <div className="ink-in">
-            <p className="prose">
-              {profile.availability}. I live in {profile.location} and work remotely. Tell me what keeps paging you.
-            </p>
-            <div className="actions">
-              <a className="btn btn-ink" href={`mailto:${profile.email}`}>
-                {profile.email}
-              </a>
-            </div>
-            <div className="links">
-              <a href={profile.github} {...ext(profile.github)}>
-                GitHub <Arrow />
-              </a>
-              <a href={profile.linkedin} {...ext(profile.linkedin)}>
-                LinkedIn <Arrow />
-              </a>
-            </div>
-          </div>
-          <figure className="scene-wrap letters-scene">
-            <DeskScene />
-          </figure>
-        </div>
-        <p className="colophon mono">
-          © {new Date().getFullYear()} {profile.name}. Set in Fraunces, Instrument Sans and IBM Plex Mono. Ink on
-          paper; the pigments mean what they mean on a dashboard.
+    <article className="feature" id={f.id} aria-labelledby={`${f.id}-h`}>
+      {/* phones read the pitch before the pinned part starts */}
+      <div className="feature-intro">
+        <p className="kicker">
+          <span>{f.index}</span> {f.kicker}
         </p>
+        <h3 id={`${f.id}-h`}>{f.name}</h3>
+        {f.badge && <p className="badge">★ {f.badge}</p>}
+        <p className="pitch">{f.pitch}</p>
+        <div className="intro-meta">{meta}</div>
       </div>
-    </footer>
+      <section className="scene" ref={ref} style={{ ['--steps' as string]: n }}>
+        <div className="scene-stage">
+          <div className="scene-copy">
+            <div className="scene-head">
+              <p className="kicker">
+                <span>{f.index}</span> {f.kicker}
+              </p>
+              <p className="scene-name" aria-hidden>
+                {f.name}
+              </p>
+              {f.badge && <p className="badge">★ {f.badge}</p>}
+              <p className="pitch">{f.pitch}</p>
+            </div>
+            <ol className="steps">
+              {f.steps.map((s, i) => (
+                <li key={s.title} className={i === active ? 'on' : i < active ? 'done' : undefined}>
+                  <span className="step-n">{String(i + 1).padStart(2, '0')}</span>
+                  <div>
+                    <b>{s.title}</b>
+                    <p>{s.body}</p>
+                  </div>
+                  <i className="step-bar" style={{ transform: `scaleX(${i < active ? 1 : i === active ? local : 0})` }} />
+                </li>
+              ))}
+            </ol>
+            <div className="scene-meta">{meta}</div>
+          </div>
+          <div className="canvas">
+            <SceneFrame component={scene.component} progress={p} label={scene.label} />
+          </div>
+        </div>
+      </section>
+    </article>
+  )
+}
+
+function Work() {
+  return (
+    <section className="work" id="work">
+      <div className="section-head">
+        <p className="kicker">
+          <span>/work</span> selected systems
+        </p>
+        <h2>
+          Four systems. <em>Scroll to run them.</em>
+        </h2>
+        <p className="section-sub">Each one is a real repo with real numbers. The animations are Remotion compositions driven frame by frame by your scroll bar.</p>
+      </div>
+      {features.map((f) => (
+        <FeatureScene key={f.id} f={f} />
+      ))}
+    </section>
+  )
+}
+
+function Lab() {
+  return (
+    <section className="lab" id="lab">
+      <div className="section-head">
+        <p className="kicker">
+          <span>/lab</span> more builds
+        </p>
+        <h2>
+          The rest of the <em>cluster.</em>
+        </h2>
+      </div>
+      <div className="lab-grid">
+        {lab.map((l) => (
+          <a className="card" key={l.name} href={l.href} target="_blank" rel="noreferrer">
+            <p className="card-kind">
+              {l.kind}
+              {l.flag && <span className="flag">{l.flag}</span>}
+            </p>
+            <h3>{l.name}</h3>
+            <p>{l.line}</p>
+            <ul className="chips">
+              {l.tags.map((t) => (
+                <li key={t}>{t}</li>
+              ))}
+            </ul>
+            <span className="card-go" aria-hidden>
+              ↗
+            </span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function Upstream() {
+  return (
+    <section className="upstream" id="upstream">
+      <div className="section-head">
+        <p className="kicker">
+          <span>/upstream</span> open source
+        </p>
+        <h2>
+          Code in other people’s <em>main.</em>
+        </h2>
+        <p className="section-sub">Merged into Cognee and LikeC4, with pull requests into the security tooling half the industry runs.</p>
+      </div>
+      <ul className="up-list">
+        {upstream.map((u) => (
+          <li key={u.href}>
+            <a href={u.href} target="_blank" rel="noreferrer">
+              <span className={`state ${u.state}`}>{u.state === 'merged' ? '● merged' : '○ PR opened'}</span>
+              <span className="up-name">
+                {u.project} <small>★ {u.stars}</small>
+              </span>
+              <span className="up-what">{u.what}</span>
+              <span className="up-go" aria-hidden>
+                ↗
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+function Record() {
+  return (
+    <section className="record" id="record">
+      <div className="section-head">
+        <p className="kicker">
+          <span>/record</span> the receipts
+        </p>
+        <h2>
+          On call for <em>four teams.</em>
+        </h2>
+      </div>
+      <div className="record-grid">
+        <div className="job">
+          <p className="job-when">{experience.when}</p>
+          <h3>{experience.role}</h3>
+          <p className="job-where">{experience.where}</p>
+          <ul>
+            {experience.points.map((pt) => (
+              <li key={pt}>{pt}</li>
+            ))}
+          </ul>
+        </div>
+        <aside className="me">
+          <img src="/assets/profile.jpg" alt="Shashwat Pratap Singh" width={590} height={1024} loading="lazy" decoding="async" />
+          <div>
+            <p className="me-name">{profile.name}</p>
+            <p className="me-line">
+              Shrinet to the internet. {education}. I came for electronics and stayed for the part where infrastructure fixes itself.
+            </p>
+          </div>
+        </aside>
+      </div>
+
+      <div className="stack">
+        {stack.map(([k, v]) => (
+          <div key={k} className="stack-row">
+            <span>{k}</span>
+            <p>
+              {v.map((t) => (
+                <em key={t}>{t}</em>
+              ))}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="honours">
+        <div>
+          <h3 className="mini">Wins</h3>
+          <ul className="wins">
+            {wins.map((w) => (
+              <li key={w.what}>
+                {w.href ? (
+                  <a href={w.href} target="_blank" rel="noreferrer">
+                    {w.what} ↗
+                  </a>
+                ) : (
+                  <b>{w.what}</b>
+                )}
+                <span>{w.note}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h3 className="mini">Certified</h3>
+          <ul className="certs">
+            {certs.map((c) => (
+              <li key={c}>{c}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Contact() {
+  return (
+    <section className="contact" id="contact">
+      <p className="kicker">
+        <span>/pager</span> contact
+      </p>
+      <h2>
+        Got a platform that pages people at 3am? <em>Let’s fix that.</em>
+      </h2>
+      <p className="section-sub">Open to contract engagements and full-time platform, SRE or DevOps roles. Remote from India, overlapping with most time zones.</p>
+      <div className="ctas">
+        <a className="btn primary big" href={`mailto:${profile.email}`}>
+          {profile.email}
+        </a>
+        <a className="btn" href={profile.linkedin} target="_blank" rel="noreferrer">
+          LinkedIn ↗
+        </a>
+        <a className="btn" href={profile.github} target="_blank" rel="noreferrer">
+          GitHub ↗
+        </a>
+      </div>
+    </section>
   )
 }
 
 export default function App() {
-  const root = useRef<HTMLDivElement>(null)
-  useGSAP(() => setupMotion(root.current!), { scope: root })
   return (
-    <div ref={root} className="page">
-      <Defs />
-      <a className="skip" href="#provision">
-        Skip to plate one
+    <>
+      <a className="skip" href="#work">
+        Skip to work
       </a>
-      <svg className="thread" aria-hidden="true">
-        <path />
-      </svg>
-      <Topbar />
+      <Header />
       <main>
         <Hero />
-        <Provision />
-        <Ship />
-        <Govern />
-        <Heal />
-        <Tagline />
-        <Studies />
-        <Catalogue />
+        <Stats />
+        <Work />
+        <Lab />
+        <Upstream />
+        <Record />
+        <Contact />
       </main>
-      <Letters />
-    </div>
+      <footer className="footer">
+        <span>
+          © {new Date().getFullYear()} {profile.name}
+        </span>
+        <span>React + Remotion · every frame scrubbed by your scroll</span>
+      </footer>
+    </>
   )
 }

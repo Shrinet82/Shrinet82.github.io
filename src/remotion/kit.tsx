@@ -1,238 +1,203 @@
-import { useMemo } from 'react'
-import { AbsoluteFill, Easing, Img, interpolate } from 'remotion'
-import { loadFont as loadFraunces } from '@remotion/google-fonts/Fraunces'
-import { loadFont as loadPlexMono } from '@remotion/google-fonts/IBMPlexMono'
-import { loadFont as loadInstrument } from '@remotion/google-fonts/InstrumentSans'
+import type { ReactNode } from 'react'
+import { Easing, interpolate } from 'remotion'
+import { loadFont as loadGeist } from '@remotion/google-fonts/Geist'
+import { loadFont as loadGeistMono } from '@remotion/google-fonts/GeistMono'
 
-// Shared drawing kit for every composition: one palette, one line quality,
-// one set of props. Everything here is drawn as if in ink on paper, shaded
-// with hatching and washed with pigment, so all scenes read as one hand.
+// Shared kit for every scene: one palette, one line weight, a few parts.
+// Scenes are flat vector with no SVG filters, so a scroll-driven re-render
+// costs a few milliseconds and the frame keeps up with the finger.
 
-export const serif = loadFraunces('normal', { weights: ['400', '500'], subsets: ['latin'] }).fontFamily
-export const serifItalic = loadFraunces('italic', { weights: ['400'], subsets: ['latin'] }).fontFamily
-export const mono = loadPlexMono('normal', { weights: ['400', '500'], subsets: ['latin'] }).fontFamily
-export const sans = loadInstrument('normal', { weights: ['400', '500'], subsets: ['latin'] }).fontFamily
+export const sans = loadGeist('normal', { weights: ['400', '500', '600', '700'], subsets: ['latin'] }).fontFamily
+export const mono = loadGeistMono('normal', { weights: ['400', '500'], subsets: ['latin'] }).fontFamily
 
 export const C = {
-  ink: '#1c1a17',
-  graphite: '#5b574f',
-  faint: '#8d877c',
-  paper: '#fbf8f2',
-  paper2: '#f3eee4',
-  rule: '#d8cfbf',
-  night: '#24386f',
-  hull: '#33456f',
-  ultra: '#26448f',
-  ultraWash: '#7b95cf',
-  ultraSoft: '#c9d3ec',
-  vermilion: '#b3321c',
-  vermWash: '#e07a62',
-  vermSoft: '#f1c4b6',
-  sap: '#3b6636',
-  sapWash: '#8fb07f',
-  sapSoft: '#d3e2c8',
-  ochre: '#8a5d12',
-  ochreWash: '#d39b34',
-  ochreSoft: '#eed3a0',
-  moon: '#f6e2a8',
+  bg: '#07090c',
+  panel: '#0d1117',
+  panel2: '#131922',
+  line: '#212a36',
+  line2: '#2e3947',
+  text: '#e8edf3',
+  muted: '#8a95a5',
+  dim: '#525d6c',
+  accent: '#ff6b2c',
+  accentSoft: '#3a1c10',
+  ok: '#3ddc84',
+  okSoft: '#0f2a1b',
+  warn: '#ffb224',
+  warnSoft: '#33260b',
+  crit: '#ff4d5e',
+  critSoft: '#35141a',
+  info: '#5b9dff',
+  infoSoft: '#122442',
 }
+
+export type Tone = 'idle' | 'run' | 'ok' | 'warn' | 'crit' | 'info' | 'accent'
+export const toneColor: Record<Tone, string> = {
+  idle: C.line2,
+  run: C.accent,
+  ok: C.ok,
+  warn: C.warn,
+  crit: C.crit,
+  info: C.info,
+  accent: C.accent,
+}
+const toneFill: Record<Tone, string> = {
+  idle: C.panel2,
+  run: C.accentSoft,
+  ok: C.okSoft,
+  warn: C.warnSoft,
+  crit: C.critSoft,
+  info: C.infoSoft,
+  accent: C.accentSoft,
+}
+
+// Every scene is a square so one layout serves phones and desktops.
+export const SCENE = { width: 800, height: 800, fps: 60, durationInFrames: 600 }
 
 export const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const
 export const ease = {
   out: Easing.bezier(0.16, 1, 0.3, 1),
   inOut: Easing.bezier(0.65, 0, 0.35, 1),
-  in: Easing.bezier(0.5, 0, 0.75, 0),
-  soft: Easing.bezier(0.33, 1, 0.68, 1),
 }
-
-// A clamped 0→1 progress between two frames.
+// Clamped 0→1 progress between two frames.
 export const prog = (f: number, a: number, b: number, easing = ease.inOut) => interpolate(f, [a, b], [0, 1], { ...clamp, easing })
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-export const osc = (f: number, period: number, phase = 0) => Math.sin((f / period + phase) * Math.PI * 2)
+export const mix = (a: string, b: string, t: number) => (t < 0.5 ? a : b)
 
-// Ink lines "boil" like hand-drawn animation: the wobble changes every few
-// frames, never smoothly.
-export const boilSeed = (f: number) => 3 + (Math.floor(f / 4) % 3)
+// A point a fraction t of the way along a polyline.
+export function along(pts: [number, number][], t: number): [number, number] {
+  const lens = pts.slice(1).map((p, i) => Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]))
+  let d = Math.max(0, Math.min(1, t)) * lens.reduce((a, b) => a + b, 0)
+  for (let i = 0; i < lens.length; i++) {
+    if (d <= lens[i] || i === lens.length - 1) {
+      const k = lens[i] ? d / lens[i] : 0
+      return [lerp(pts[i][0], pts[i + 1][0], k), lerp(pts[i][1], pts[i + 1][1], k)]
+    }
+    d -= lens[i]
+  }
+  return pts[pts.length - 1]
+}
+export const poly = (pts: [number, number][]) => 'M' + pts.map((p) => p.join(' ')).join(' L')
 
-function WashFilter({ id }: { id: string }) {
+export function Stage({ children }: { children: ReactNode }) {
   return (
-    <filter id={id} x="-30%" y="-30%" width="160%" height="160%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.011" numOctaves="2" seed="7" result="n" />
-      <feDisplacementMap in="SourceGraphic" in2="n" scale="46" result="d" />
-      <feGaussianBlur in="d" stdDeviation="7" />
-    </filter>
+    <svg viewBox={`0 0 ${SCENE.width} ${SCENE.height}`} width="100%" height="100%" style={{ display: 'block', fontFamily: sans }}>
+      {/* a faint dotted grid, the "canvas" every scene sits on */}
+      <defs>
+        <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse">
+          <circle cx="1" cy="1" r="1.2" fill={C.line} />
+        </pattern>
+      </defs>
+      <rect width={SCENE.width} height={SCENE.height} fill="url(#dots)" />
+      {children}
+    </svg>
   )
 }
 
-// A wash that sits still behind a scene. It is baked into an <img>, which the
-// browser rasterizes once and caches: drawn inline, the filter re-ran on every
-// frame whenever anything on top of it moved. The camera pans the image.
-export type Blob = { cx: number; cy: number; rx: number; ry: number; fill: string; opacity: number }
-
-export function WashLayer({ blobs, world, viewWidth, camera = 0 }: { blobs: Blob[]; world: { w: number; h: number }; viewWidth: number; camera?: number }) {
-  const src = useMemo(() => {
-    const ellipses = blobs.map((b) => `<ellipse cx='${b.cx}' cy='${b.cy}' rx='${b.rx}' ry='${b.ry}' fill='${b.fill}' opacity='${b.opacity}'/>`).join('')
-    const svg =
-      `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${world.w} ${world.h}' width='${world.w}' height='${world.h}'>` +
-      `<filter id='w' x='-30%' y='-30%' width='160%' height='160%'>` +
-      `<feTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='2' seed='7' result='n'/>` +
-      `<feDisplacementMap in='SourceGraphic' in2='n' scale='46' result='d'/><feGaussianBlur in='d' stdDeviation='7'/></filter>` +
-      `<g filter='url(#w)'>${ellipses}</g></svg>`
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
-  }, [blobs, world.w, world.h])
-  return (
-    <AbsoluteFill style={{ overflow: 'hidden' }}>
-      <Img
-        src={src}
-        alt=""
-        style={{ position: 'absolute', top: 0, height: '100%', width: `${(world.w / viewWidth) * 100}%`, left: `${(camera / viewWidth) * 100}%`, maxWidth: 'none' }}
-      />
-    </AbsoluteFill>
-  )
-}
-
-export function Defs({ id, f, deckle }: { id: string; f: number; deckle?: { w: number; h: number } }) {
-  return (
-    <defs>
-      {deckle && (
-        // a torn, deckled paper edge for scenes that fill their frame
-        <>
-          <filter id={`${id}-deckle-f`} x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="11" />
-            <feDisplacementMap in="SourceGraphic" scale="16" />
-          </filter>
-          <mask id={`${id}-deckle`} maskUnits="userSpaceOnUse" x="0" y="0" width={deckle.w} height={deckle.h}>
-            <rect x={10} y={10} width={deckle.w - 20} height={deckle.h - 20} rx={6} fill="#fff" filter={`url(#${id}-deckle-f)`} />
-          </mask>
-        </>
-      )}
-      {/* Few octaves on purpose: scrolling repaints these filters every
-          frame, and finer noise is lost under the displacement and blur. */}
-      <filter id={`${id}-rough`} x="-5%" y="-5%" width="110%" height="110%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="1" seed={boilSeed(f)} />
-        <feDisplacementMap in="SourceGraphic" scale="2.4" />
-      </filter>
-      <WashFilter id={`${id}-wash`} />
-      <pattern id={`${id}-hatch`} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(40)">
-        <line x1="0" y1="0" x2="0" y2="5" stroke={C.ink} strokeWidth="0.9" opacity="0.55" />
-      </pattern>
-      <pattern id={`${id}-hatch-light`} width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(40)">
-        <line x1="0" y1="0" x2="0" y2="7" stroke={C.ink} strokeWidth="0.7" opacity="0.3" />
-      </pattern>
-      <pattern id={`${id}-cross`} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(40)">
-        <line x1="0" y1="0" x2="0" y2="5" stroke={C.ink} strokeWidth="0.8" opacity="0.5" />
-        <line x1="0" y1="0" x2="5" y2="0" stroke={C.ink} strokeWidth="0.8" opacity="0.5" />
-      </pattern>
-    </defs>
-  )
-}
-
-// A shipping container: corrugated sides, door rods on the right end, a
-// hatched shadow along the bottom and an optional Docker stencil.
-export function Box({
-  id,
+// A labelled block: a pipeline stage, a service, a cloud resource.
+export function Node({
   x,
   y,
-  w = 62,
-  h = 30,
-  fill,
-  label,
-  whale = false,
-  stroke = C.ink,
+  w,
+  h,
+  title,
+  sub,
+  tone = 'idle',
+  opacity = 1,
+  r = 14,
+  align = 'left',
 }: {
-  id: string
   x: number
   y: number
-  w?: number
-  h?: number
-  fill: string
-  label?: string
-  whale?: boolean
-  stroke?: string
+  w: number
+  h: number
+  title: string
+  sub?: string
+  tone?: Tone
+  opacity?: number
+  r?: number
+  align?: 'left' | 'center'
 }) {
-  const ribs = Math.floor((w - 14) / 6)
+  const col = toneColor[tone]
+  const tx = align === 'center' ? w / 2 : 20
   return (
-    <g transform={`translate(${x} ${y})`}>
-      <rect width={w} height={h} fill={fill} stroke={stroke} strokeWidth={1.8} />
-      <rect x={0} y={0} width={w} height={3} fill={stroke} opacity={0.25} />
-      {Array.from({ length: ribs }, (_, i) => (
-        <line key={i} x1={5 + i * 6} y1={4} x2={5 + i * 6} y2={h - 4} stroke={stroke} strokeWidth={0.7} opacity={0.55} />
-      ))}
-      <line x1={w - 7} y1={3} x2={w - 7} y2={h - 3} stroke={stroke} strokeWidth={1.1} />
-      <line x1={w - 3.5} y1={3} x2={w - 3.5} y2={h - 3} stroke={stroke} strokeWidth={1.1} />
-      <rect x={0} y={h - 5} width={w} height={5} fill={`url(#${id}-hatch)`} />
-      {whale && <Whale x={w / 2 - 10} y={h / 2 - 5} scale={0.5} />}
-      {label && (
-        <text x={w / 2 - 3} y={h / 2 + 4} textAnchor="middle" fontFamily={mono} fontSize={Math.min(11, h * 0.36)} fill={stroke}>
-          {label}
+    <g transform={`translate(${x} ${y})`} opacity={opacity}>
+      {tone !== 'idle' && <rect x={-5} y={-5} width={w + 10} height={h + 10} rx={r + 5} fill="none" stroke={col} strokeOpacity={0.22} strokeWidth={6} />}
+      <rect width={w} height={h} rx={r} fill={toneFill[tone]} stroke={col} strokeWidth={2} />
+      <text x={tx} y={sub ? h / 2 - 4 : h / 2 + 9} textAnchor={align === 'center' ? 'middle' : 'start'} fontSize={25} fontWeight={600} fill={tone === 'idle' ? C.muted : C.text}>
+        {title}
+      </text>
+      {sub && (
+        <text x={tx} y={h / 2 + 24} textAnchor={align === 'center' ? 'middle' : 'start'} fontFamily={mono} fontSize={19} fill={tone === 'idle' ? C.dim : col}>
+          {sub}
         </text>
       )}
     </g>
   )
 }
 
-// A tiny Docker whale stencil, drawn not traced.
-export function Whale({ x, y, scale = 1 }: { x: number; y: number; scale?: number }) {
+// A connection that draws itself from 0 to `t`.
+export function Wire({ d, t, tone = 'idle', dashed = false }: { d: string; t: number; tone?: Tone; dashed?: boolean }) {
   return (
-    <g transform={`translate(${x} ${y}) scale(${scale})`} opacity={0.8}>
-      <path d="M0 12 C 0 4, 26 2, 34 8 L 40 2 C 42 6, 42 10, 38 12 C 34 22, 4 22, 0 12 Z" fill="none" stroke={C.ink} strokeWidth={2.4} />
-      {[0, 1, 2].map((i) => (
-        <rect key={i} x={6 + i * 8} y={-4} width={6} height={5} fill="none" stroke={C.ink} strokeWidth={1.8} />
-      ))}
+    <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+      <path d={d} stroke={C.line} strokeWidth={3} strokeDasharray={dashed ? '6 10' : undefined} />
+      {t > 0 && <path d={d} pathLength={1} stroke={toneColor[tone]} strokeWidth={3} strokeDasharray={`${t} 1`} />}
     </g>
   )
 }
 
-// The helm. Seven spokes like the Kubernetes mark, turned handles like a
-// real ship's wheel. Rotation is applied by the caller.
-export function Helm({ r, hub = C.ochreWash }: { r: number; hub?: string }) {
+export function Packet({ x, y, tone = 'run', r = 9 }: { x: number; y: number; tone?: Tone; r?: number }) {
+  const col = toneColor[tone]
   return (
-    <g>
-      {Array.from({ length: 7 }, (_, i) => {
-        const a = (i / 7) * Math.PI * 2 - Math.PI / 2
-        const c = Math.cos(a)
-        const s = Math.sin(a)
-        return (
-          <g key={i}>
-            <line x1={c * r * 0.22} y1={s * r * 0.22} x2={c * r * 1.34} y2={s * r * 1.34} stroke={C.ink} strokeWidth={r * 0.1} strokeLinecap="round" />
-            <ellipse
-              cx={c * r * 1.3}
-              cy={s * r * 1.3}
-              rx={r * 0.12}
-              ry={r * 0.2}
-              fill={C.ochreSoft}
-              stroke={C.ink}
-              strokeWidth={r * 0.05}
-              transform={`rotate(${(a * 180) / Math.PI + 90} ${c * r * 1.3} ${s * r * 1.3})`}
-            />
-          </g>
-        )
-      })}
-      <circle r={r} fill="none" stroke={C.ink} strokeWidth={r * 0.14} />
-      <circle r={r} fill="none" stroke={C.ochreWash} strokeWidth={r * 0.06} />
-      <circle r={r * 0.26} fill={hub} stroke={C.ink} strokeWidth={r * 0.07} />
+    <g transform={`translate(${x} ${y})`}>
+      <circle r={r * 2.2} fill={col} opacity={0.18} />
+      <circle r={r} fill={col} />
     </g>
   )
 }
 
-// A layered, periodic sea. Shift by whole wavelengths and it loops forever.
-export function seaPath(width: number, y: number, amp: number, len: number, bottom: number) {
-  let d = `M ${-len} ${y}`
-  const end = width + len * 5
-  for (let x = -len; x < end; x += len) d += ` q ${len / 4} ${-amp} ${len / 2} 0 t ${len / 2} 0`
-  return `${d} L ${end} ${bottom} L ${-len} ${bottom} Z`
-}
-
-export function Chip({ x, y, tone, text, opacity = 1 }: { x: number; y: number; tone: 'ok' | 'bad' | 'info'; text: string; opacity?: number }) {
-  const col = tone === 'ok' ? C.sap : tone === 'bad' ? C.vermilion : C.ultra
-  const w = text.length * 7.6 + 34
+export function Pill({ x, y, text, tone = 'info', opacity = 1, anchor = 'start' }: { x: number; y: number; text: string; tone?: Tone; opacity?: number; anchor?: 'start' | 'middle' | 'end' }) {
+  const col = toneColor[tone]
+  const w = text.length * 11.4 + 46
+  const ox = anchor === 'middle' ? -w / 2 : anchor === 'end' ? -w : 0
   return (
-    <g opacity={opacity} transform={`translate(${x} ${y})`}>
-      <rect width={w} height={26} rx={13} fill={C.paper} stroke={col} strokeWidth={1.4} />
-      <circle cx={14} cy={13} r={4.5} fill={col} />
-      <text x={26} y={17.5} fontFamily={mono} fontSize={12.5} fill={col}>
+    <g transform={`translate(${x + ox} ${y})`} opacity={opacity}>
+      <rect width={w} height={38} rx={19} fill={toneFill[tone]} stroke={col} strokeWidth={1.6} />
+      <circle cx={21} cy={19} r={5.5} fill={col} />
+      <text x={36} y={26} fontFamily={mono} fontSize={19} fill={col}>
         {text}
       </text>
+    </g>
+  )
+}
+
+// Monospace caption; `chars` reveals it like a terminal typing.
+export function Mono({ x, y, text, size = 20, fill = C.muted, chars, weight = 400, anchor = 'start', opacity = 1 }: { x: number; y: number; text: string; size?: number; fill?: string; chars?: number; weight?: number; anchor?: 'start' | 'middle' | 'end'; opacity?: number }) {
+  const shown = chars === undefined ? text : text.slice(0, Math.max(0, Math.floor(chars)))
+  return (
+    <text x={x} y={y} fontFamily={mono} fontSize={size} fill={fill} fontWeight={weight} textAnchor={anchor} opacity={opacity} style={{ whiteSpace: 'pre' }}>
+      {shown}
+    </text>
+  )
+}
+
+export function Check({ x, y, s = 1, color = C.ok }: { x: number; y: number; s?: number; color?: string }) {
+  return <path d="M-8 0 L-2 6 L9 -6" transform={`translate(${x} ${y}) scale(${s})`} fill="none" stroke={color} strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round" />
+}
+
+// A small panel with a title bar, like a window in a dashboard.
+export function Panel({ x, y, w, h, title, children, opacity = 1, tone }: { x: number; y: number; w: number; h: number; title: string; children?: ReactNode; opacity?: number; tone?: Tone }) {
+  return (
+    <g transform={`translate(${x} ${y})`} opacity={opacity}>
+      <rect width={w} height={h} rx={16} fill={C.panel} stroke={tone ? toneColor[tone] : C.line2} strokeWidth={tone ? 2 : 1.5} />
+      <line x1={0} x2={w} y1={46} y2={46} stroke={C.line} strokeWidth={1.5} />
+      {[0, 1, 2].map((i) => (
+        <circle key={i} cx={22 + i * 18} cy={23} r={5} fill={C.line2} />
+      ))}
+      <text x={84} y={30} fontFamily={mono} fontSize={18} fill={C.muted}>
+        {title}
+      </text>
+      {children}
     </g>
   )
 }
