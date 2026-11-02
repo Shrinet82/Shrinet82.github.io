@@ -14,6 +14,10 @@ export const FRAMES = {
   loop: LOOP.durationInFrames,
 }
 
+// Composition frame rates. Captions are timed in beats of 1/30 s, so a 60 fps
+// film's frame is halved before it is compared with them.
+export const FPS = { golden: GOLDEN.fps, conveyor: CONVEYOR.fps, lighthouse: LIGHTHOUSE.fps, loop: LOOP.fps }
+
 // A film finishes at 86% of its pinned scroll and holds its last frame for
 // the rest, so the finished picture is on screen before the page moves on.
 const HOLD = 0.86
@@ -92,6 +96,7 @@ const Scrubbed = memo(function Scrubbed({
   width,
   height,
   frames,
+  fps = 30,
   inputProps,
 }: {
   name: keyof typeof FRAMES
@@ -101,6 +106,7 @@ const Scrubbed = memo(function Scrubbed({
   width: number
   height: number
   frames: number
+  fps?: number
   inputProps?: Record<string, unknown>
 }) {
   return (
@@ -112,7 +118,7 @@ const Scrubbed = memo(function Scrubbed({
         durationInFrames={frames}
         compositionWidth={width}
         compositionHeight={height}
-        fps={30}
+        fps={fps}
         frameToDisplay={frameAt(progress, frames)}
         style={{ width: '100%', aspectRatio: `${width} / ${height}` }}
       />
@@ -134,6 +140,7 @@ export function GoldenPathPlayer({ progress }: Film) {
       width={size.width}
       height={size.height}
       frames={GOLDEN.durationInFrames}
+      fps={GOLDEN.fps}
       inputProps={{ narrow }}
     />
   )

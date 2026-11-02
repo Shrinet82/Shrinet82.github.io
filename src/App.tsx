@@ -3,7 +3,7 @@ import { useGSAP } from '@gsap/react'
 import { setupMotion } from './motion'
 import Glyph from './Glyphs'
 import { DeskScene, EaselScene } from './Scenes'
-import { ConveyorPlayer, FRAMES, frameAt, GoldenPathPlayer, HarbourPlayer, LighthousePlayer, LoopPlayer } from './remotion/players'
+import { ConveyorPlayer, FPS, FRAMES, frameAt, GoldenPathPlayer, HarbourPlayer, LighthousePlayer, LoopPlayer } from './remotion/players'
 import { useScrollProgress } from './scroll'
 import {
   awards,
@@ -127,8 +127,9 @@ function Film({
   const [ref, p] = useScrollProgress<HTMLDivElement>()
   const steps = filmSteps[name]
   const frame = frameAt(p, FRAMES[name])
+  const beat = (frame * 30) / FPS[name]
   let on = 0
-  steps.forEach((s, i) => frame >= s.at && (on = i))
+  steps.forEach((s, i) => beat >= s.at && (on = i))
   return (
     <div ref={ref} className={`film-stage ${wide ? 'film-stage-wide' : ''}`} style={{ '--len': `${len}vh` } as React.CSSProperties}>
       <div className="film-pin">

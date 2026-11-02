@@ -246,15 +246,15 @@ export const verses = {
   heal: ['It notices. It proposes. It waits for a yes,', 'then writes the fix down in Git,', 'where everything worth keeping is kept.'],
 }
 
-// Captions for the pinned films. `at` is the composition frame where each
-// step begins; the caption under a film follows the scroll with it.
+// Captions for the pinned films. `at` is the beat (1/30 s) where each step
+// begins; the caption under a film follows the scroll with it.
 export type FilmStep = { at: number; title: string; text: string }
 export const filmSteps: Record<'golden' | 'conveyor' | 'lighthouse' | 'loop', FilmStep[]> = {
   golden: [
-    { at: 0, title: 'The queue', text: 'Every bucket was a ticket: six manual steps and 45 minutes of waiting.' },
-    { at: 150, title: 'One form', text: 'Instead, a developer fills one Backstage golden-path form.' },
-    { at: 200, title: 'The pipeline', text: 'Terraform plans, Infracost checks the budget, OIDC applies with no stored keys.' },
-    { at: 252, title: 'Catalogued', text: 'It lands in the catalog. S3 in 8 minutes, a VPC in 12, an app on Kubernetes in 10.' },
+    { at: 0, title: 'By hand', text: 'A ticket, copy-pasted config, Terraform from scratch: about 45 minutes for one bucket.' },
+    { at: 150, title: 'One form', text: 'One Backstage golden-path form. The template keeps the bucket encrypted and private.' },
+    { at: 214, title: 'The pipeline', text: 'GitHub Actions signs in keyless over OIDC, plans, and Infracost prices it before apply.' },
+    { at: 262, title: 'Catalogued', text: 'Applied, tagged and in the catalog by itself. S3 in 8 minutes, a VPC in 12, an app in 10.' },
   ],
   conveyor: [
     { at: 0, title: 'Security gates', text: 'Gitleaks and Checkov: no secrets in the code, no holes in the IaC.' },
