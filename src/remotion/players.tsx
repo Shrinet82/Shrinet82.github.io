@@ -73,7 +73,7 @@ export function HarbourPlayer() {
         fps={HARBOUR.fps}
         loop
         autoPlay={!still}
-        initialFrame={still ? 300 : 0}
+        initialFrame={still ? 600 : 0}
         style={{ width: '100%', aspectRatio: `${HARBOUR.width} / ${HARBOUR.height}` }}
         {...quiet}
       />

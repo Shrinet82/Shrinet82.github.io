@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AbsoluteFill, Easing, Img, interpolate } from 'remotion'
 import { loadFont as loadFraunces } from '@remotion/google-fonts/Fraunces'
 import { loadFont as loadPlexMono } from '@remotion/google-fonts/IBMPlexMono'
@@ -69,17 +69,56 @@ function WashFilter({ id }: { id: string }) {
 // frame whenever anything on top of it moved. The camera pans the image.
 export type Blob = { cx: number; cy: number; rx: number; ry: number; fill: string; opacity: number }
 
+// The wash as a data-URL SVG image. Also usable as an SVG <image> inside a
+// scene, where the browser rasterizes it once instead of every frame.
+export function washSrc(blobs: Blob[], world: { w: number; h: number }) {
+  const ellipses = blobs.map((b) => `<ellipse cx='${b.cx}' cy='${b.cy}' rx='${b.rx}' ry='${b.ry}' fill='${b.fill}' opacity='${b.opacity}'/>`).join('')
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${world.w} ${world.h}' width='${world.w}' height='${world.h}'>` +
+    `<filter id='w' x='-30%' y='-30%' width='160%' height='160%'>` +
+    `<feTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='2' seed='7' result='n'/>` +
+    `<feDisplacementMap in='SourceGraphic' in2='n' scale='46' result='d'/><feGaussianBlur in='d' stdDeviation='7'/></filter>` +
+    `<g filter='url(#w)'>${ellipses}</g></svg>`
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
+// A data-URL SVG with filters is re-rasterized every time it is drawn. In
+// the browser, rasterize it once into a bitmap (at 2x for sharp screens)
+// and use that; until it is ready, or if the canvas refuses, use the SVG.
+const rasters = new Map<string, string>()
+export function useRaster(src: string, w: number, h: number, scale = 2) {
+  const [url, setUrl] = useState(() => rasters.get(src) ?? src)
+  useEffect(() => {
+    const done = rasters.get(src)
+    if (done) return setUrl(done)
+    let live = true
+    const img = new Image()
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = w * scale
+        canvas.height = h * scale
+        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+        canvas.toBlob((blob) => {
+          if (!blob) return
+          const out = URL.createObjectURL(blob)
+          rasters.set(src, out)
+          if (live) setUrl(out)
+        })
+      } catch {
+        // a tainted canvas: keep the SVG
+      }
+    }
+    img.src = src
+    return () => {
+      live = false
+    }
+  }, [src, w, h, scale])
+  return url
+}
+
 export function WashLayer({ blobs, world, viewWidth, camera = 0 }: { blobs: Blob[]; world: { w: number; h: number }; viewWidth: number; camera?: number }) {
-  const src = useMemo(() => {
-    const ellipses = blobs.map((b) => `<ellipse cx='${b.cx}' cy='${b.cy}' rx='${b.rx}' ry='${b.ry}' fill='${b.fill}' opacity='${b.opacity}'/>`).join('')
-    const svg =
-      `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${world.w} ${world.h}' width='${world.w}' height='${world.h}'>` +
-      `<filter id='w' x='-30%' y='-30%' width='160%' height='160%'>` +
-      `<feTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='2' seed='7' result='n'/>` +
-      `<feDisplacementMap in='SourceGraphic' in2='n' scale='46' result='d'/><feGaussianBlur in='d' stdDeviation='7'/></filter>` +
-      `<g filter='url(#w)'>${ellipses}</g></svg>`
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
-  }, [blobs, world.w, world.h])
+  const src = useMemo(() => washSrc(blobs, world), [blobs, world.w, world.h])
   return (
     <AbsoluteFill style={{ overflow: 'hidden' }}>
       <Img
