@@ -54,7 +54,7 @@ export const pipeline = {
   total: '32m 52s',
   stages: [
     { name: 'Security gates', tools: 'Gitleaks · Checkov', time: '4m 26s', secs: 266 },
-    { name: 'App quality', tools: 'backend + frontend checks', time: '3m 09s', secs: 189 },
+    { name: 'App quality', tools: 'backend + frontend', time: '3m 09s', secs: 189 },
     { name: 'Build factory', tools: 'Docker · Trivy · SBOM', time: '10m 23s', secs: 623, flag: true },
     { name: 'Delivery', tools: 'AKS rollout', time: '2m 12s', secs: 132 },
     { name: 'Verification', tools: 'smoke test · OWASP ZAP', time: '6m 39s', secs: 399 },
@@ -165,15 +165,33 @@ export const elsewhere: Project[] = [
   },
 ]
 
+// The hero's margin ledger: the numbers worth leading with.
+export const ledger = [
+  { big: '−82%', what: 'S3 provisioning time', note: '45 → 8 min on OPSIE' },
+  { big: '< 2 min', what: 'runaway-resource cleanup', note: 'was 4 to 24 hours' },
+  { big: '1st', what: 'Agents of SigNoz', note: 'Aegis Observe' },
+  { big: '4', what: 'engineering teams', note: 'on platforms I built' },
+]
+
+// Pull requests sent to projects whose tools I use every day. Opened, not
+// merged: said plainly so nobody has to check.
+export const sent = [
+  { where: 'Trivy', stars: '39k★', what: 'Removed an unused Insecure field from the RPC ServiceOption.', href: 'https://github.com/aquasecurity/trivy/pull/10169' },
+  { where: 'Tracee', stars: '4.7k★', what: 'Mainline-kernel testing in CI through QEMU, and a fix for a flaky engine test.', href: 'https://github.com/aquasecurity/tracee/pull/5233' },
+  { where: 'OpenClaw', stars: '394k★', what: 'Container vulnerability scanning before images are pushed.', href: 'https://github.com/openclaw/openclaw/pull/7438' },
+]
+
 export const upstream = [
   {
     where: 'Cognee',
+    stars: '33k★',
     what: 'Native Langfuse and OpenTelemetry integration, with a span processor that maps Cognee spans to OTel GenAI conventions.',
     state: 'merged to main',
     href: 'https://github.com/topoteretes/cognee/commits?author=Shrinet82',
   },
   {
     where: 'LikeC4',
+    stars: '6k★',
     what: 'Test coverage for the $exclude predicate in deployment views.',
     state: 'PR #2576 merged',
     href: 'https://github.com/likec4/likec4/pull/2576',

@@ -4,9 +4,9 @@ import { MotionPathPlugin } from 'gsap/MotionPathPlugin'
 
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin)
 
-// Each illustrated scene loops like a short motion-graphics clip. Loops only
-// run while their scene is on screen, and every scene is composed so that its
-// static markup (reduced motion) is already a complete picture.
+// The easel is painted by the scroll; the desk's steam and pager loop gently
+// while on screen. Every scene's static markup (reduced motion) is already a
+// complete picture.
 
 type Loop = gsap.core.Animation
 type Build = (svg: SVGSVGElement) => Loop[]
@@ -25,16 +25,13 @@ const easel: Build = (svg) => {
   const len = drawable(line)
   const bars = q(svg, '.paint-bar')
   const brush = one(svg, '.brush')
-  const tl = gsap.timeline({ repeat: -1, repeatDelay: 1.2 })
-  tl.set(line, { strokeDashoffset: len })
-    .set(bars, { scaleY: 0, transformOrigin: '50% 100%' })
-    .to(bars, { scaleY: 1, duration: 0.3, stagger: 0.18, ease: 'back.out(2)' })
-    .to(line, { strokeDashoffset: 0, duration: 1.6, ease: 'none' }, 0.2)
+  const tl = gsap.timeline({
+    scrollTrigger: { trigger: svg, start: 'top 85%', end: 'bottom 45%', scrub: true },
+  })
+  tl.fromTo(bars, { scaleY: 0, transformOrigin: '50% 100%' }, { scaleY: 1, duration: 0.3, stagger: 0.18, ease: 'back.out(2)' })
+    .fromTo(line, { strokeDashoffset: len }, { strokeDashoffset: 0, duration: 1.6, ease: 'none' }, 0.2)
     .fromTo(brush, { x: 114, y: 180 }, { duration: 1.6, ease: 'none', motionPath: { path: line, align: line, alignOrigin: [0, 0] } }, 0.2)
-    .to(brush, { x: 290, y: 60, duration: 0.8, ease: 'power2.inOut' }, '+=0.3')
-    .to([line, ...bars], { opacity: 0, duration: 0.4 }, '+=0.8')
-    .set([line, ...bars], { opacity: 1 })
-  return [tl]
+  return []
 }
 
 const desk: Build = (svg) => {

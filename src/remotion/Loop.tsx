@@ -38,10 +38,10 @@ function Chart({ x, y, drawn, spike, tone }: { x: number; y: number; drawn: numb
     <g>
       <rect x={x - 10} y={y - 120} width={340} height={140} rx={6} fill={C.paper} stroke={C.rule} strokeWidth={1.4} />
       <line x1={x} y1={y - 60} x2={x + 320} y2={y - 60} stroke={C.vermilion} strokeWidth={1} strokeDasharray="4 4" />
-      <text x={x + 318} y={y - 64} textAnchor="end" fontFamily={mono} fontSize={10} fill={C.vermilion}>
+      <text x={x + 318} y={y - 64} textAnchor="end" fontFamily={mono} fontSize={12} fill={C.vermilion}>
         slo
       </text>
-      <text x={x} y={y - 102} fontFamily={mono} fontSize={10.5} fill={C.graphite}>
+      <text x={x} y={y - 102} fontFamily={mono} fontSize={12.5} fill={C.graphite}>
         fraud-detection-api · p99 latency
       </text>
       <path d={d} fill="none" stroke={tone} strokeWidth={2.6} strokeLinejoin="round" strokeLinecap="round" />
@@ -56,14 +56,14 @@ function PanelFrame({ i, active }: { i: number; active: number }) {
     <g opacity={lerp(0.42, 1, active)}>
       <rect x={x} y={40} width={PANEL_W} height={548} rx={10} fill={C.paper} stroke={active > 0.5 ? C.ultra : C.ink} strokeWidth={active > 0.5 ? 2.4 : 1.6} filter={`url(#${ID}-rough)`} />
       <circle cx={x + 34} cy={82} r={16} fill={active > 0.5 ? C.ultra : C.paper} stroke={C.ink} strokeWidth={1.4} />
-      <text x={x + 34} y={87} textAnchor="middle" fontFamily={mono} fontSize={13} fill={active > 0.5 ? C.paper : C.ink}>
+      <text x={x + 34} y={87} textAnchor="middle" fontFamily={mono} fontSize={14} fill={active > 0.5 ? C.paper : C.ink}>
         {i + 1}
       </text>
       <text x={x + 62} y={92} fontFamily={serif} fontSize={30} fill={C.ink}>
         {t.verb}
       </text>
       {t.line.map((l, k) => (
-        <text key={k} x={x + 24} y={128 + k * 19} fontFamily={sans} fontSize={14} fill={C.graphite}>
+        <text key={k} x={x + 24} y={128 + k * 19} fontFamily={sans} fontSize={15} fill={C.graphite}>
           {l}
         </text>
       ))}
@@ -81,11 +81,11 @@ function Detect() {
       <Chart x={x} y={320} drawn={prog(f, 0, 45, ease.soft)} spike={1} tone={C.ink} />
       <g opacity={prog(f, 38, 46)} transform="translate(0 0)">
         <rect x={x + 186} y={228} width={134} height={24} rx={12} fill={C.vermSoft} stroke={C.vermilion} strokeWidth={1.2} />
-        <text x={x + 198} y={244} fontFamily={mono} fontSize={11} fill={C.vermilion}>
+        <text x={x + 198} y={244} fontFamily={mono} fontSize={13} fill={C.vermilion}>
           ● 504 SLO breach
         </text>
       </g>
-      <text x={x - 6} y={372} fontFamily={mono} fontSize={11} fill={C.ultra} opacity={prog(f, 46, 54)}>
+      <text x={x - 6} y={372} fontFamily={mono} fontSize={13} fill={C.ultra} opacity={prog(f, 46, 54)}>
         signoz_search_logs "504"
       </text>
       {logs.map((l, k) => {
@@ -93,7 +93,7 @@ function Detect() {
         return (
           <g key={k} opacity={prog(f, 48 + k * 2, 54 + k * 2)}>
             <rect x={x - 10} y={384 + k * 30} width={340} height={24} rx={4} fill={hit ? C.vermSoft : 'transparent'} />
-            <text x={x} y={401 + k * 30} fontFamily={mono} fontSize={12} fill={hit ? C.vermilion : C.graphite}>
+            <text x={x} y={401 + k * 30} fontFamily={mono} fontSize={14} fill={hit ? C.vermilion : C.graphite}>
               {l}
             </text>
           </g>
@@ -135,7 +135,7 @@ function Decide() {
         return (
           <g key={t.label} transform={`translate(${cx + Math.cos(a) * 164} ${cy + Math.sin(a) * 156})`}>
             <rect x={-58} y={-13} width={116} height={26} rx={13} fill={chosen ? C.ultra : C.paper} stroke={chosen ? C.ultra : C.ink} strokeWidth={1.3} />
-            <text y={4.5} textAnchor="middle" fontFamily={mono} fontSize={11} fill={chosen ? C.paper : C.ink}>
+            <text y={4.5} textAnchor="middle" fontFamily={mono} fontSize={13} fill={chosen ? C.paper : C.ink}>
               {t.label}
             </text>
           </g>
@@ -145,21 +145,21 @@ function Decide() {
         <path d="M -5 0 L 0 -98 L 5 0 Z" fill={C.vermWash} stroke={C.ink} strokeWidth={1.4} />
       </g>
       <circle cx={cx} cy={cy} r={9} fill={C.ochreWash} stroke={C.ink} strokeWidth={1.6} />
-      <text x={cx} y={cy + 40} textAnchor="middle" fontFamily={mono} fontSize={11} fill={C.graphite}>
+      <text x={cx} y={cy + 40} textAnchor="middle" fontFamily={mono} fontSize={13} fill={C.graphite}>
         llm · select one tool
       </text>
       {/* confidence against the gate */}
       <g transform={`translate(${cx - 140} 452)`}>
-        <text x={0} y={-10} fontFamily={mono} fontSize={11} fill={C.graphite}>
+        <text x={0} y={-10} fontFamily={mono} fontSize={13} fill={C.graphite}>
           confidence
         </text>
         <rect x={0} y={0} width={280} height={14} rx={7} fill={C.paper} stroke={C.ink} strokeWidth={1.2} />
         <rect x={0} y={0} width={280 * conf} height={14} rx={7} fill={conf > 0.7 ? C.sapWash : C.ochreWash} />
         <line x1={196} y1={-6} x2={196} y2={20} stroke={C.ink} strokeWidth={1.6} strokeDasharray="3 3" />
-        <text x={196} y={34} textAnchor="middle" fontFamily={mono} fontSize={10} fill={C.ink}>
+        <text x={196} y={34} textAnchor="middle" fontFamily={mono} fontSize={12} fill={C.ink}>
           gate
         </text>
-        <text x={280} y={60} textAnchor="end" fontFamily={mono} fontSize={12} fill={C.sap} opacity={conf > 0.7 ? 1 : 0}>
+        <text x={280} y={60} textAnchor="end" fontFamily={mono} fontSize={14} fill={C.sap} opacity={conf > 0.7 ? 1 : 0}>
           ✓ gate passed
         </text>
       </g>
@@ -179,25 +179,25 @@ function Ask() {
         <rect x={cx - 96} y={186} width={192} height={370} rx={24} fill={C.ink} />
         <rect x={cx - 86} y={204} width={172} height={334} rx={14} fill={C.paper2} />
       </g>
-      <text x={cx - 74} y={228} fontFamily={mono} fontSize={10.5} fill={C.graphite}>
+      <text x={cx - 74} y={228} fontFamily={mono} fontSize={12.5} fill={C.graphite}>
         #incidents
       </text>
       <g opacity={card} transform={`translate(0 ${(1 - card) * 14})`}>
         <rect x={cx - 78} y={242} width={156} height={172} rx={8} fill={C.paper} stroke={C.ink} strokeWidth={1.2} />
         <rect x={cx - 78} y={242} width={5} height={172} fill={C.ochreWash} />
-        <text x={cx - 64} y={264} fontFamily={serif} fontSize={14} fill={C.ink}>
+        <text x={cx - 64} y={264} fontFamily={serif} fontSize={15} fill={C.ink}>
           aegis-observe
         </text>
-        <text x={cx - 64} y={284} fontFamily={sans} fontSize={11.5} fill={C.vermilion}>
+        <text x={cx - 64} y={284} fontFamily={sans} fontSize={13.5} fill={C.vermilion}>
           fraud-detection-api
         </text>
-        <text x={cx - 64} y={300} fontFamily={sans} fontSize={11.5} fill={C.vermilion}>
+        <text x={cx - 64} y={300} fontFamily={sans} fontSize={13.5} fill={C.vermilion}>
           504 SLO breach
         </text>
-        <text x={cx - 64} y={324} fontFamily={sans} fontSize={11.5} fill={C.ink}>
+        <text x={cx - 64} y={324} fontFamily={sans} fontSize={13.5} fill={C.ink}>
           Proposed:
         </text>
-        <text x={cx - 64} y={340} fontFamily={sans} fontSize={11.5} fill={C.ink}>
+        <text x={cx - 64} y={340} fontFamily={sans} fontSize={13.5} fill={C.ink}>
           patch the manifest
         </text>
         {['Approve', 'PR', 'Reject'].map((b, k) => {
@@ -207,7 +207,7 @@ function Ask() {
           return (
             <g key={b}>
               <rect x={bx} y={362} width={w} height={26} rx={5} fill={on ? C.ultra : C.paper} stroke={C.ink} strokeWidth={1.2} />
-              <text x={bx + w / 2} y={379} textAnchor="middle" fontFamily={sans} fontSize={11} fill={on ? C.paper : C.ink}>
+              <text x={bx + w / 2} y={379} textAnchor="middle" fontFamily={sans} fontSize={13} fill={on ? C.paper : C.ink}>
                 {b}
               </text>
             </g>
@@ -218,7 +218,7 @@ function Ask() {
       <g transform={`translate(${cx} 452)`} opacity={card}>
         <rect x={-9} y={-2} width={18} height={14} rx={2} fill={C.ochreSoft} stroke={C.ink} strokeWidth={1.3} />
         <path d="M -5 -2 L -5 -7 A 5 5 0 0 1 5 -7 L 5 -2" fill="none" stroke={C.ink} strokeWidth={1.6} />
-        <text y={34} textAnchor="middle" fontFamily={mono} fontSize={10} fill={C.graphite}>
+        <text y={34} textAnchor="middle" fontFamily={mono} fontSize={12} fill={C.graphite}>
           incident locked
         </text>
       </g>
@@ -229,7 +229,7 @@ function Ask() {
       </g>
       <g opacity={prog(f, 66, 74)}>
         <rect x={cx - 92} y={508} width={184} height={26} rx={13} fill={C.ultraSoft} stroke={C.ultra} strokeWidth={1.2} />
-        <text x={cx} y={525} textAnchor="middle" fontFamily={mono} fontSize={11} fill={C.ultra}>
+        <text x={cx} y={525} textAnchor="middle" fontFamily={mono} fontSize={13} fill={C.ultra}>
           human in the loop: PR
         </text>
       </g>
@@ -253,18 +253,18 @@ function Fix() {
       {[0, 60, 130, 250, 310].map((dx) => (
         <circle key={dx} cx={x0 + dx} cy={260} r={dx === 250 ? (merged ? 10 : 7) : 7} fill={dx === 250 && merged ? C.sapWash : C.paper} stroke={C.ink} strokeWidth={1.6} />
       ))}
-      <text x={x0 - 6} y={288} fontFamily={mono} fontSize={10.5} fill={C.graphite}>
+      <text x={x0 - 6} y={288} fontFamily={mono} fontSize={12.5} fill={C.graphite}>
         main
       </text>
       <g transform={`translate(${bx} ${by - 44})`} opacity={merged ? 1 - prog(f, 54, 60) : card > 0 ? 1 : 0.9}>
         <rect x={-66} y={-30} width={132} height={60} rx={6} fill={C.paper} stroke={C.ultra} strokeWidth={1.6} />
-        <text x={-56} y={-12} fontFamily={mono} fontSize={10.5} fill={C.ultra}>
+        <text x={-56} y={-12} fontFamily={mono} fontSize={12.5} fill={C.ultra}>
           PR · patch manifest
         </text>
         {[0, 1, 2].map((k) => (
           <line key={k} x1={-56} y1={2 + k * 9} x2={[40, 52, 28][k]} y2={2 + k * 9} stroke={C.faint} strokeWidth={1.4} />
         ))}
-        <text x={-56} y={34 + 10} fontFamily={mono} fontSize={9} fill={C.graphite}>
+        <text x={-56} y={34 + 10} fontFamily={mono} fontSize={11} fill={C.graphite}>
           reasoning attached
         </text>
       </g>
@@ -276,7 +276,7 @@ function Fix() {
           <path d="M 22 0 A 22 22 0 0 1 -18 12" fill="none" stroke={C.ink} strokeWidth={2.4} />
           <path d="M -18 12 l 2 9 l -9 -5 Z" fill={C.ink} />
         </g>
-        <text y={46} textAnchor="middle" fontFamily={mono} fontSize={10.5} fill={C.graphite}>
+        <text y={46} textAnchor="middle" fontFamily={mono} fontSize={12.5} fill={C.graphite}>
           argocd sync
         </text>
       </g>
@@ -297,10 +297,10 @@ function Fix() {
 
 const SPANS = [
   { name: 'aegis.incident', x: 0, w: 1 },
-  { name: 'signoz.mcp.search_logs', x: 0.02, w: 0.18 },
-  { name: 'llm.select_tool · tokens', x: 0.22, w: 0.2 },
+  { name: 'signoz.search', x: 0.02, w: 0.18 },
+  { name: 'llm.select_tool', x: 0.22, w: 0.2 },
   { name: 'slack.approval', x: 0.44, w: 0.3 },
-  { name: 'gitops.pull_request', x: 0.76, w: 0.22 },
+  { name: 'gitops.pr', x: 0.76, w: 0.22 },
 ]
 function Verify() {
   const f = useCurrentFrame()
@@ -309,7 +309,7 @@ function Verify() {
   return (
     <g>
       <Chart x={x0} y={320} drawn={1} spike={1 - recover} tone={recover > 0.6 ? C.sap : C.ink} />
-      <text x={x0 - 6} y={372} fontFamily={mono} fontSize={11} fill={C.ultra}>
+      <text x={x0 - 6} y={372} fontFamily={mono} fontSize={13} fill={C.ultra}>
         agent trace · opentelemetry
       </text>
       {SPANS.map((s, k) => {
@@ -317,7 +317,7 @@ function Verify() {
         return (
           <g key={s.name}>
             <rect x={x0 + s.x * 300} y={386 + k * 30} width={Math.max(2, s.w * 300 * grow)} height={18} rx={3} fill={k === 2 ? C.ochreSoft : C.ultraSoft} stroke={k === 2 ? C.ochre : C.ultra} strokeWidth={1} />
-            <text x={x0 + s.x * 300 + 4} y={399 + k * 30} fontFamily={mono} fontSize={10} fill={C.ink} opacity={grow}>
+            <text x={x0 + s.x * 300 + 4} y={399 + k * 30} fontFamily={mono} fontSize={12} fill={C.ink} opacity={grow}>
               {s.name}
             </text>
           </g>
@@ -325,7 +325,7 @@ function Verify() {
       })}
       <g opacity={prog(f, 84, 94)} transform={`translate(${x0 + 30} 546)`}>
         <rect x={0} y={0} width={262} height={28} rx={14} fill={C.ochreSoft} stroke={C.ochre} strokeWidth={1.3} />
-        <text x={131} y={19} textAnchor="middle" fontFamily={mono} fontSize={11.5} fill={C.ochre}>
+        <text x={131} y={19} textAnchor="middle" fontFamily={mono} fontSize={13.5} fill={C.ochre}>
           ★ 1st place · Agents of SigNoz
         </text>
       </g>

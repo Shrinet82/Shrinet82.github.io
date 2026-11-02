@@ -235,7 +235,7 @@ export const Harbour: React.FC = () => {
               {/* hold hatch lid slides open for the replacement */}
               <rect x={506 + hatch * 36} y={312} width={52} height={7} fill={C.ochreSoft} stroke={C.ink} strokeWidth={1.4} />
             </g>
-            <text x={492} y={350} fontFamily={serif} fontSize={10} letterSpacing={1.6} fill={C.paper}>
+            <text x={492} y={350} fontFamily={serif} fontSize={12} letterSpacing={1.6} fill={C.paper}>
               ΚΥΒΕΡΝΗΤΗΣ
             </text>
 

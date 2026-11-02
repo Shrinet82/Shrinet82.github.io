@@ -36,7 +36,7 @@ function Panel({ x, active, title, sub, children }: { x: number; active: number;
       <text x={x + 22} y={58} fontFamily={serifItalic} fontSize={26} fill={C.ink}>
         {title}
       </text>
-      <text x={x + 22 + title.length * 12 + 14} y={57} fontFamily={mono} fontSize={13} fill={C.graphite}>
+      <text x={x + 22 + title.length * 12 + 14} y={57} fontFamily={mono} fontSize={14} fill={C.graphite}>
         {sub}
       </text>
       <line x1={x + 22} y1={72} x2={x + 422} y2={72} stroke={C.rule} strokeWidth={1.4} />
@@ -88,7 +88,7 @@ export const GoldenPath: React.FC<{ narrow?: boolean }> = ({ narrow = false }) =
           <text x={130} y={300} textAnchor="middle" fontFamily={serif} fontSize={34} fill={C.vermilion}>
             {`${String(Math.round(leftMin)).padStart(2, '0')}:00`}
           </text>
-          <text x={130} y={320} textAnchor="middle" fontFamily={mono} fontSize={12} fill={C.graphite}>
+          <text x={130} y={320} textAnchor="middle" fontFamily={mono} fontSize={14} fill={C.graphite}>
             minutes waiting
           </text>
           {/* the ticket pile */}
@@ -99,14 +99,14 @@ export const GoldenPath: React.FC<{ narrow?: boolean }> = ({ narrow = false }) =
               <g key={i} opacity={land > 0 ? 1 : 0} transform={`translate(${282 + (i % 2) * 8} ${lerp(-60, 250 - i * 16, land)}) rotate(${rot * land})`}>
                 <rect x={-80} y={-24} width={160} height={48} fill={C.paper} stroke={C.ink} strokeWidth={1.6} />
                 <rect x={-80} y={-24} width={8} height={48} fill={C.ochreWash} />
-                <text x={-64} y={-5} fontFamily={mono} fontSize={11} fill={C.ink}>{`TICKET-48${i}`}</text>
-                <text x={-64} y={12} fontFamily={sans} fontSize={11} fill={C.graphite}>
+                <text x={-64} y={-5} fontFamily={mono} fontSize={13} fill={C.ink}>{`TICKET-48${i}`}</text>
+                <text x={-64} y={12} fontFamily={sans} fontSize={13} fill={C.graphite}>
                   need an S3 bucket
                 </text>
               </g>
             )
           })}
-          <text x={282} y={300} textAnchor="middle" fontFamily={mono} fontSize={12} fill={C.graphite}>
+          <text x={282} y={300} textAnchor="middle" fontFamily={mono} fontSize={14} fill={C.graphite}>
             the queue
           </text>
           {/* the old way, one slow step at a time */}
@@ -116,7 +116,7 @@ export const GoldenPath: React.FC<{ narrow?: boolean }> = ({ narrow = false }) =
               <g key={s} transform={`translate(${44 + (i % 3) * 140} ${370 + Math.floor(i / 3) * 34})`}>
                 <rect x={0} y={-13} width={16} height={16} fill={C.paper} stroke={C.ink} strokeWidth={1.4} />
                 {done && <path d="M3 -5 l 4 4 l 7 -9" fill="none" stroke={C.vermilion} strokeWidth={2} />}
-                <text x={24} y={0} fontFamily={sans} fontSize={13} fill={done ? C.ink : C.faint}>
+                <text x={24} y={0} fontFamily={sans} fontSize={14} fill={done ? C.ink : C.faint}>
                   {s}
                 </text>
               </g>
@@ -140,27 +140,27 @@ export const GoldenPath: React.FC<{ narrow?: boolean }> = ({ narrow = false }) =
           {[534, 546, 558].map((x) => (
             <circle key={x} cx={x} cy={101} r={3.4} fill="none" stroke={C.ink} strokeWidth={1.2} />
           ))}
-          <text x={574} y={105} fontFamily={mono} fontSize={10.5} fill={C.graphite}>
+          <text x={574} y={105} fontFamily={mono} fontSize={12.5} fill={C.graphite}>
             backstage · create · s3 bucket
           </text>
           <rect x={536} y={124} width={132} height={22} rx={11} fill={C.ochreSoft} stroke={C.ochre} strokeWidth={1} />
-          <text x={548} y={139} fontFamily={mono} fontSize={10.5} fill={C.ochre}>
+          <text x={548} y={139} fontFamily={mono} fontSize={12.5} fill={C.ochre}>
             ★ golden path
           </text>
           {fields.map((fl, i) => (
             <g key={fl.label} transform={`translate(536 ${160 + i * 36})`}>
-              <text x={0} y={10} fontFamily={sans} fontSize={11} fill={C.graphite}>
+              <text x={0} y={10} fontFamily={sans} fontSize={13} fill={C.graphite}>
                 {fl.label}
               </text>
               <rect x={88} y={-4} width={184} height={22} rx={3} fill="#fff" stroke={f >= 158 + i * 14 && f < 172 + i * 14 ? C.ultra : C.rule} strokeWidth={1.4} />
-              <text x={96} y={11} fontFamily={mono} fontSize={11.5} fill={C.ink}>
+              <text x={96} y={11} fontFamily={mono} fontSize={13.5} fill={C.ink}>
                 {typed(158 + i * 14, fl.value)}
               </text>
             </g>
           ))}
           <g transform={`translate(740 ${270}) scale(${pressed ? 0.94 : 1})`}>
             <rect x={-38} y={-14} width={76} height={26} rx={13} fill={f >= 194 ? C.ultra : C.ink} />
-            <text x={0} y={4} textAnchor="middle" fontFamily={sans} fontSize={12} fill={C.paper}>
+            <text x={0} y={4} textAnchor="middle" fontFamily={sans} fontSize={14} fill={C.paper}>
               {f >= 200 ? 'Created' : 'Create'}
             </text>
           </g>
@@ -174,11 +174,11 @@ export const GoldenPath: React.FC<{ narrow?: boolean }> = ({ narrow = false }) =
               <g key={n.label}>
                 <circle cx={x} cy={346} r={11} fill={lit ? C.ultra : C.paper} stroke={C.ink} strokeWidth={1.6} />
                 {lit && <path d={`M${x - 5} 346 l 3.5 3.5 l 6.5 -7`} fill="none" stroke={C.paper} strokeWidth={2} />}
-                <text x={x} y={376} textAnchor="middle" fontFamily={mono} fontSize={11} fill={lit ? C.ink : C.faint}>
+                <text x={x} y={376} textAnchor="middle" fontFamily={mono} fontSize={13} fill={lit ? C.ink : C.faint}>
                   {n.label}
                 </text>
                 {n.tag && (
-                  <text x={x} y={392} textAnchor="middle" fontFamily={mono} fontSize={10} fill={C.sap} opacity={lit ? 1 : 0}>
+                  <text x={x} y={392} textAnchor="middle" fontFamily={mono} fontSize={12} fill={C.sap} opacity={lit ? 1 : 0}>
                     {n.tag}
                   </text>
                 )}
@@ -191,10 +191,10 @@ export const GoldenPath: React.FC<{ narrow?: boolean }> = ({ narrow = false }) =
             <text x={538} y={428} fontFamily={serif} fontSize={16} fill={C.ink}>
               orders-archive
             </text>
-            <text x={538} y={445} fontFamily={mono} fontSize={10.5} fill={C.graphite}>
+            <text x={538} y={445} fontFamily={mono} fontSize={12.5} fill={C.graphite}>
               s3 · prod · owner team-payments
             </text>
-            <text x={906} y={437} textAnchor="end" fontFamily={mono} fontSize={11} fill={C.sap}>
+            <text x={906} y={437} textAnchor="end" fontFamily={mono} fontSize={13} fill={C.sap}>
               ✓ in the catalog
             </text>
           </g>
@@ -216,7 +216,7 @@ export const GoldenPath: React.FC<{ narrow?: boolean }> = ({ narrow = false }) =
               <text x={x} y={566} fontFamily={serif} fontSize={24} fill={C.ultra}>
                 {`${Math.round(cur)} min`}
               </text>
-              <text x={x} y={588} fontFamily={mono} fontSize={12} fill={C.vermilion} textDecoration="line-through">
+              <text x={x} y={588} fontFamily={mono} fontSize={14} fill={C.vermilion} textDecoration="line-through">
                 {`was ${r.before} min`}
               </text>
             </Interactive.G>

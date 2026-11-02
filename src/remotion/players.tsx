@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Player, type PlayerRef } from '@remotion/player'
+import { flushSync } from 'react-dom'
+import { Player, Thumbnail, type PlayerRef } from '@remotion/player'
 import { Harbour, HARBOUR } from './Harbour'
 import { GoldenPath, GOLDEN, GOLDEN_NARROW } from './GoldenPath'
 import { Conveyor, CONVEYOR, WORLD } from './Conveyor'
@@ -13,7 +14,25 @@ export const SCRUBS = {
   lighthouse: { selector: '[data-scrub="lighthouse"]', frames: LIGHTHOUSE.durationInFrames, pinned: false, length: 0 },
   loop: { selector: '[data-stage="heal"]', frames: LOOP.durationInFrames, pinned: true, length: 260 },
 }
-export const players: Partial<Record<keyof typeof SCRUBS, PlayerRef | null>> = {}
+type Name = keyof typeof SCRUBS
+const setters: Partial<Record<Name, (frame: number) => void>> = {}
+const shown: Partial<Record<Name, number>> = {}
+
+// Show the frame for scroll progress p. The render is flushed synchronously,
+// inside the same animation frame that moved the page, so the picture never
+// trails the scroll. Calls made while React is mid-commit are deferred a frame.
+export function scrubTo(name: Name, p: number) {
+  const set = setters[name]
+  if (!set) return
+  const frame = Math.round(Math.min(1, Math.max(0, p)) * (SCRUBS[name].frames - 1))
+  if (frame === shown[name]) return
+  shown[name] = frame
+  try {
+    flushSync(() => set(frame))
+  } catch {
+    set(frame)
+  }
+}
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -78,7 +97,7 @@ export function HarbourPlayer() {
 }
 
 // A composition the scroll plays. It rests on its last frame, so without JS
-// scrolling (or with reduced motion) it shows the finished picture.
+// (or with reduced motion) it shows the finished picture.
 function Scrubbed({
   name,
   label,
@@ -88,7 +107,7 @@ function Scrubbed({
   frames,
   inputProps,
 }: {
-  name: keyof typeof SCRUBS
+  name: Name
   label: string
   component: React.ComponentType<any>
   width: number
@@ -96,22 +115,26 @@ function Scrubbed({
   frames: number
   inputProps?: Record<string, unknown>
 }) {
+  const [frame, setFrame] = useState(frames - 1)
+  useEffect(() => {
+    setters[name] = setFrame
+    return () => {
+      delete setters[name]
+      delete shown[name]
+    }
+  }, [name])
   return (
     <div role="img" aria-label={label} data-scrub={name}>
-      <Player
+      <Thumbnail
         key={width}
-        ref={(r) => {
-          players[name] = r
-        }}
         component={component}
         inputProps={inputProps}
         durationInFrames={frames}
         compositionWidth={width}
         compositionHeight={height}
         fps={30}
-        initialFrame={frames - 1}
+        frameToDisplay={frame}
         style={{ width: '100%', aspectRatio: `${width} / ${height}` }}
-        {...quiet}
       />
     </div>
   )

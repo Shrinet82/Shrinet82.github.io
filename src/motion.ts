@@ -3,12 +3,15 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
 import { useGSAP } from '@gsap/react'
 import { scenes } from './sceneMotion'
-import { players, SCRUBS } from './remotion/players'
+import { scrubTo, SCRUBS } from './remotion/players'
 
 gsap.registerPlugin(ScrollTrigger, SplitText, useGSAP)
 
 // Markup is written in its finished state; everything here animates *from*
 // an earlier state, so reduced motion (or no JS) shows the complete page.
+// Past the hero's opening, every animation is tied to the scroll position
+// itself: no smoothing, no timers, nothing drifting at its own speed. Scroll
+// down and it plays; scroll back up and it plays in reverse, in step.
 const OUT = 'expo.out'
 type Opts = { pin: boolean }
 type Cleanup = void | (() => void)
@@ -90,16 +93,15 @@ function hero(root: HTMLElement) {
   const art = root.querySelector<HTMLElement>('.hero-art')!
   gsap.from(art, { opacity: 0, y: 24, duration: 1.4, ease: OUT, delay: 0.3 })
 
-  // As you leave, the scene drifts up a little slower than the page.
-  gsap.to(art, { yPercent: -12, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } })
+}
+
+// Fade and lift an element in over a short stretch of scroll as it enters.
+function rise(el: Element, y = 18) {
+  gsap.fromTo(el, { opacity: 0, y }, { opacity: 1, y: 0, ease: 'none', scrollTrigger: { trigger: el, start: 'top 96%', end: 'top 72%', scrub: true } })
 }
 
 function plates(root: HTMLElement) {
   root.querySelectorAll<HTMLElement>('.plate').forEach((plate) => {
-    const numeral = plate.querySelector('.numeral')
-    if (numeral)
-      gsap.fromTo(numeral, { yPercent: 40 }, { yPercent: -40, ease: 'none', scrollTrigger: { trigger: plate, start: 'top bottom', end: 'bottom top', scrub: true } })
-
     // Opacity only: a scrubbed blur on every word repaints the verse each frame.
     const words = plate.querySelectorAll('.verse .vw')
     if (words.length)
@@ -110,50 +112,37 @@ function plates(root: HTMLElement) {
           opacity: 1,
           ease: 'none',
           stagger: 0.12,
-          scrollTrigger: { trigger: plate.querySelector('.verse'), start: 'top 85%', end: 'bottom 45%', scrub: 0.6 },
+          scrollTrigger: { trigger: plate.querySelector('.verse'), start: 'top 85%', end: 'bottom 45%', scrub: true },
         },
       )
   })
 
   root.querySelectorAll<HTMLElement>('.plate .scene-wrap').forEach((w) => {
-    if (!w.querySelector('svg.scene')) return
-    gsap.from(w, { opacity: 0, y: 40, rotate: 1.5, duration: 1.2, ease: OUT, scrollTrigger: { trigger: w, start: 'top 88%', once: true } })
-    gsap.fromTo(w.firstElementChild, { y: 30 }, { y: -30, ease: 'none', scrollTrigger: { trigger: w, start: 'top bottom', end: 'bottom top', scrub: true } })
+    if (w.querySelector('svg.scene')) rise(w, 28)
   })
-
-  const inks = root.querySelectorAll('.ink-in')
-  gsap.set(inks, { opacity: 0, y: 16 })
-  ScrollTrigger.batch(inks, {
-    start: 'top 88%',
-    once: true,
-    onEnter: (b) => gsap.to(b, { opacity: 1, y: 0, duration: 1, ease: OUT, stagger: 0.08 }),
-  })
+  root.querySelectorAll('.ink-in').forEach((el) => rise(el))
 }
 
 // Plates I-IV are Remotion compositions whose frame is the scroll position.
 // Ship and Heal pin while they play; Provision and Govern play as they pass.
 function scrubbed(root: HTMLElement, name: keyof typeof SCRUBS, { pin }: Opts, onProgress?: (p: number) => void): Cleanup {
-  const { selector, frames, pinned, length } = SCRUBS[name]
+  const { selector, pinned, length } = SCRUBS[name]
   const stage = root.querySelector<HTMLElement>(selector)
   if (!stage) return
-  const last = frames - 1
-  let shown = -1
   const update = (p: number) => {
-    // Scroll fires far more often than the film has frames; only re-render
-    // the composition when the frame actually changes.
-    const frame = Math.round(p * last)
-    if (frame !== shown) players[name]?.seekTo((shown = frame))
+    scrubTo(name, p)
     onProgress?.(p)
   }
-  ScrollTrigger.create(
+  const st = ScrollTrigger.create(
     pin && pinned
-      ? { trigger: stage, start: 'top 10%', end: `+=${length}%`, pin: true, scrub: 0.6, refreshPriority: 1, onUpdate: (s) => update(s.progress) }
-      : { trigger: stage, start: 'top 85%', end: 'bottom 40%', scrub: 0.6, onUpdate: (s) => update(s.progress) },
+      ? { trigger: stage, start: 'top 10%', end: `+=${length}%`, pin: true, refreshPriority: 1, onUpdate: (s) => update(s.progress) }
+      : { trigger: stage, start: 'top 85%', end: 'bottom 40%', onUpdate: (s) => update(s.progress) },
   )
-  update(0)
+  // match wherever the page already is (a reload halfway down, a #link)
+  const raf = requestAnimationFrame(() => update(st.progress))
   return () => {
-    players[name]?.seekTo(last)
-    onProgress?.(1)
+    cancelAnimationFrame(raf)
+    update(1)
   }
 }
 
@@ -174,13 +163,13 @@ function tagline(root: HTMLElement) {
       y: 0,
       ease: 'none',
       stagger: 0.1,
-      scrollTrigger: { trigger: root.querySelector('.tagline'), start: 'top 75%', end: 'bottom 50%', scrub: 0.5 },
+      scrollTrigger: { trigger: root.querySelector('.tagline'), start: 'top 75%', end: 'bottom 50%', scrub: true },
     },
   )
 }
 
-// Framed studies hang at slightly different depths and drift at different
-// speeds; each diagram plays when its frame arrives and replays on hover.
+// Framed studies: each diagram is drawn by the scroll as its frame comes up
+// the page, and undrawn as it goes back down.
 function glyphTimeline(svg: SVGSVGElement) {
   const tl = gsap.timeline({ paused: true, defaults: { ease: OUT } })
   const q = <T extends Element>(sel: string) => [...svg.querySelectorAll<T>(sel)]
@@ -222,12 +211,22 @@ function glyphTimeline(svg: SVGSVGElement) {
       const sick = q<SVGRectElement>('.g-pod-sick')[0]
       const count = q<SVGTSpanElement>('.g-count')[0]
       const v = { n: 0 }
-      tl.call(() => sick.classList.add('sick'))
-      tl.set(q('.g-fix'), { opacity: 0 })
-      tl.fromTo(v, { n: 0 }, { n: 4, duration: 1.2, ease: 'steps(4)', onUpdate: () => void (count.textContent = String(Math.round(v.n))) })
-      tl.to(sick, { opacity: 0.3, duration: 0.15, yoyo: true, repeat: 3 }, '<')
-      tl.call(() => sick.classList.remove('sick'))
-      tl.to(q('.g-fix'), { opacity: 1, duration: 0.4 })
+      tl.fromTo(
+        v,
+        { n: 0 },
+        {
+          n: 4,
+          duration: 1.2,
+          ease: 'steps(4)',
+          onUpdate: () => {
+            const n = Math.round(v.n)
+            count.textContent = String(n)
+            sick.classList.toggle('sick', n > 0 && n < 4)
+          },
+        },
+      )
+      tl.fromTo(sick, { opacity: 1 }, { opacity: 0.3, duration: 0.15, yoyo: true, repeat: 3 }, '<')
+      tl.fromTo(q('.g-fix'), { opacity: 0 }, { opacity: 1, duration: 0.4 })
       restore.push(() => {
         sick.classList.remove('sick')
         count.textContent = '4'
@@ -254,33 +253,14 @@ function glyphTimeline(svg: SVGSVGElement) {
 }
 
 function studies(root: HTMLElement): Cleanup {
-  const hover = window.matchMedia('(hover: hover)').matches
   const cleanups: (() => void)[] = []
   root.querySelectorAll<HTMLElement>('.frame').forEach((frame) => {
-    const speed = Number(frame.dataset.speed ?? 1)
-    gsap.fromTo(
-      frame,
-      { y: (speed - 1) * 260 },
-      { y: -(speed - 1) * 260, ease: 'none', scrollTrigger: { trigger: frame, start: 'top bottom', end: 'bottom top', scrub: true } },
-    )
-    gsap.from(frame.querySelector('.frame-inner'), {
-      opacity: 0,
-      rotate: -4,
-      y: 30,
-      duration: 1.1,
-      ease: OUT,
-      scrollTrigger: { trigger: frame, start: 'top 90%', once: true },
-    })
+    rise(frame.querySelector('.frame-inner')!, 30)
     const svg = frame.querySelector<SVGSVGElement>('.glyph')
     if (!svg) return
     const { tl, restore } = glyphTimeline(svg)
-    ScrollTrigger.create({ trigger: frame, start: 'top 80%', once: true, onEnter: () => void tl.play(0) })
-    const replay = () => {
-      if (!tl.isActive()) tl.play(0)
-    }
-    if (hover) frame.addEventListener('mouseenter', replay)
+    ScrollTrigger.create({ trigger: frame, start: 'top 85%', end: 'top 35%', scrub: true, animation: tl })
     cleanups.push(() => {
-      frame.removeEventListener('mouseenter', replay)
       tl.progress(1).kill()
       restore()
     })
@@ -291,20 +271,16 @@ function studies(root: HTMLElement): Cleanup {
 function letters(root: HTMLElement) {
   const under = root.querySelector<SVGPathElement>('.brush-under path')!
   const len = inkable(under)
-  gsap.fromTo(under, { strokeDashoffset: len }, { strokeDashoffset: 0, ease: 'none', scrollTrigger: { trigger: '.letters-title', start: 'top 85%', end: 'top 45%', scrub: 0.6 } })
+  gsap.fromTo(under, { strokeDashoffset: len }, { strokeDashoffset: 0, ease: 'none', scrollTrigger: { trigger: '.letters-title', start: 'top 80%', end: 'top 45%', scrub: true } })
   SplitText.create(root.querySelector('.letters-title')!, {
     type: 'words',
     autoSplit: true,
     onSplit: (self) =>
-      gsap.from(self.words, {
-        opacity: 0,
-        y: 24,
-        filter: 'blur(8px)',
-        duration: 1.1,
-        ease: OUT,
-        stagger: 0.08,
-        scrollTrigger: { trigger: '.letters-title', start: 'top 85%', once: true },
-      }),
+      gsap.fromTo(
+        self.words,
+        { opacity: 0, y: 24 },
+        { opacity: 1, y: 0, ease: 'none', stagger: 0.15, scrollTrigger: { trigger: '.letters-title', start: 'top 92%', end: 'top 60%', scrub: true } },
+      ),
   })
 }
 

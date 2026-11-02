@@ -48,7 +48,7 @@ function Tag({ x, y, f, at, ok = true, children }: { x: number; y: number; f: nu
   return (
     <g opacity={t} transform={`translate(${x} ${y + (1 - t) * 10})`}>
       <rect width={children.length * 8 + 22} height={26} rx={13} fill={C.paper} stroke={col} strokeWidth={1.4} />
-      <text x={11} y={17.5} fontFamily={mono} fontSize={13} fill={col}>
+      <text x={11} y={17.5} fontFamily={mono} fontSize={14} fill={col}>
         {children}
       </text>
     </g>
@@ -66,7 +66,7 @@ function ScannerArch({ f, active }: { f: number; active: boolean }) {
         <rect x={S1 - 84} y={132} width={20} height={BELT_TOP - 132} fill={C.paper} stroke={C.ink} strokeWidth={2} />
         <rect x={S1 + 64} y={132} width={20} height={BELT_TOP - 132} fill={C.paper} stroke={C.ink} strokeWidth={2} />
       </g>
-      <text x={S1} y={119} textAnchor="middle" fontFamily={mono} fontSize={11.5} letterSpacing={1.5} fill={C.ink}>
+      <text x={S1} y={119} textAnchor="middle" fontFamily={mono} fontSize={13.5} letterSpacing={1.5} fill={C.ink}>
         SECRETS · IaC
       </text>
       {Array.from({ length: 8 }, (_, i) => (
@@ -112,7 +112,7 @@ function TestRig({ f }: { f: number }) {
           <path d="M 8 -24.7 A 26 26 0 0 1 26 0 L 0 0 Z" fill={C.sapSoft} />
           <line x1={0} y1={0} x2={Math.sin((needle(g.at) * Math.PI) / 180) * 22} y2={-Math.cos((needle(g.at) * Math.PI) / 180) * 22} stroke={C.ink} strokeWidth={2} strokeLinecap="round" />
           <circle r={3} fill={C.ink} />
-          <text y={16} textAnchor="middle" fontFamily={mono} fontSize={11} fill={C.graphite}>
+          <text y={-32} textAnchor="middle" fontFamily={mono} fontSize={13} fill={C.graphite}>
             {g.label}
           </text>
         </g>
@@ -138,7 +138,7 @@ function BuildFactory({ f }: { f: number }) {
         <rect x={S3 - 112} y={210} width={14} height={BELT_TOP - 210} fill={C.paper} stroke={C.ink} strokeWidth={2} />
         <rect x={S3 + 98} y={210} width={14} height={BELT_TOP - 210} fill={C.paper} stroke={C.ink} strokeWidth={2} />
       </g>
-      <text x={S3} y={204} textAnchor="middle" fontFamily={mono} fontSize={10.5} letterSpacing={1.4} fill={C.ink}>
+      <text x={S3} y={204} textAnchor="middle" fontFamily={mono} fontSize={12.5} letterSpacing={1.4} fill={C.ink}>
         BUILD · TRIVY · SBOM
       </text>
       {/* x-ray sweep across the booth while scanning */}
@@ -150,7 +150,7 @@ function BuildFactory({ f }: { f: number }) {
         <rect x={S3 - 110} y={20} width={220} height={156} rx={8} fill={C.ink} />
         <rect x={S3 - 102} y={28} width={204} height={140} rx={4} fill="#20283d" />
       </g>
-      <text x={S3 - 92} y={46} fontFamily={mono} fontSize={10.5} fill={C.ultraSoft}>
+      <text x={S3 - 92} y={46} fontFamily={mono} fontSize={12.5} fill={C.ultraSoft}>
         trivy image · layers
       </text>
       {LAYERS.map((l, i) => {
@@ -163,11 +163,11 @@ function BuildFactory({ f }: { f: number }) {
           <g key={l} opacity={shown}>
             <g transform={`translate(${-out * 240} 0)`} opacity={1 - out}>
               <rect x={S3 - 92} y={y} width={184} height={20} rx={3} fill={bad ? C.vermWash : '#34405e'} stroke={bad ? C.vermSoft : '#4c5b82'} />
-              <text x={S3 - 84} y={y + 14} fontFamily={mono} fontSize={11} fill={C.paper}>
+              <text x={S3 - 84} y={y + 14} fontFamily={mono} fontSize={13} fill={C.paper}>
                 {l}
               </text>
               {bad && (
-                <text x={S3 + 84} y={y + 14} textAnchor="end" fontFamily={mono} fontSize={11} fill={C.paper}>
+                <text x={S3 + 84} y={y + 14} textAnchor="end" fontFamily={mono} fontSize={13} fill={C.paper}>
                   2 critical
                 </text>
               )}
@@ -175,13 +175,13 @@ function BuildFactory({ f }: { f: number }) {
             {isDeps && swap > 0 && (
               <g transform={`translate(${(1 - swap) * 240} 0)`}>
                 <rect x={S3 - 92} y={y} width={184} height={20} rx={3} fill={C.sapWash} stroke={C.sapSoft} />
-                <text x={S3 - 84} y={y + 14} fontFamily={mono} fontSize={11} fill={C.ink}>
+                <text x={S3 - 84} y={y + 14} fontFamily={mono} fontSize={13} fill={C.ink}>
                   dependencies, upgraded
                 </text>
               </g>
             )}
             {!isDeps && fixed && (
-              <text x={S3 + 84} y={y + 14} textAnchor="end" fontFamily={mono} fontSize={11} fill={C.sapSoft}>
+              <text x={S3 + 84} y={y + 14} textAnchor="end" fontFamily={mono} fontSize={13} fill={C.sapSoft}>
                 ok
               </text>
             )}
@@ -201,7 +201,7 @@ function BuildFactory({ f }: { f: number }) {
           stroke={C.ink}
           strokeWidth={1.2}
         />
-        <text x={S3 + 153} y={250 - paper * 70 + 16} textAnchor="middle" fontFamily={mono} fontSize={9} fill={C.ultra}>
+        <text x={S3 + 153} y={250 - paper * 70 + 16} textAnchor="middle" fontFamily={mono} fontSize={11} fill={C.ultra}>
           SBOM
         </text>
         {[0, 1, 2].map((i) => (
@@ -351,7 +351,7 @@ export const Conveyor: React.FC<{ viewWidth: number }> = ({ viewWidth }) => {
               <path d="M1532 276 L 1535 252 L 1555 252 L 1558 276 Z" fill={C.paper} stroke={C.ink} strokeWidth={1.8} />
               <rect x={1535} y={258} width={20} height={5} fill={C.vermWash} />
             </g>
-            <text x={1206} y={390} fontFamily={serif} fontSize={11} letterSpacing={1.6} fill={C.paper}>
+            <text x={1206} y={390} fontFamily={serif} fontSize={13} letterSpacing={1.6} fill={C.paper}>
               ΚΥΒΕΡΝΗΤΗΣ
             </text>
             <g transform="translate(1500 340)">
@@ -400,16 +400,16 @@ export const Conveyor: React.FC<{ viewWidth: number }> = ({ viewWidth }) => {
               <g key={s.name} opacity={on || ok ? 1 : 0.45}>
                 <rect x={x} y={456} width={200} height={70} rx={8} fill={C.paper} stroke={on ? C.ultra : ok ? C.sap : C.ink} strokeWidth={on ? 2.4 : 1.4} />
                 <circle cx={x + 20} cy={476} r={11} fill={ok ? C.sap : on ? C.ultra : C.paper} stroke={C.ink} strokeWidth={1.2} />
-                <text x={x + 20} y={480} textAnchor="middle" fontFamily={mono} fontSize={11} fill={ok || on ? C.paper : C.ink}>
+                <text x={x + 20} y={480} textAnchor="middle" fontFamily={mono} fontSize={13} fill={ok || on ? C.paper : C.ink}>
                   {ok ? '✓' : i + 1}
                 </text>
                 <text x={x + 40} y={482} fontFamily={serif} fontSize={19} fill={C.ink}>
                   {s.name}
                 </text>
-                <text x={x + 14} y={503} fontFamily={mono} fontSize={11} fill={C.graphite}>
+                <text x={x + 14} y={503} fontFamily={mono} fontSize={13} fill={C.graphite}>
                   {s.tools}
                 </text>
-                <text x={x + 14} y={519} fontFamily={mono} fontSize={12.5} fill={C.ultra}>
+                <text x={x + 14} y={519} fontFamily={mono} fontSize={14.5} fill={C.ultra}>
                   {s.time}
                 </text>
               </g>

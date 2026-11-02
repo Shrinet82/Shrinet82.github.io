@@ -9,11 +9,13 @@ import {
   certs,
   education,
   elsewhere,
+  ledger,
   pipeline,
   plates,
   profile,
   provision,
   repos,
+  sent,
   stack,
   upstream,
   verses,
@@ -150,6 +152,17 @@ function Hero() {
         <figure className="hero-art">
           <HarbourPlayer />
         </figure>
+        <dl className="ledger hero-in">
+          {ledger.map((l) => (
+            <div key={l.what}>
+              <dt>{l.big}</dt>
+              <dd>
+                {l.what}
+                <span className="mono">{l.note}</span>
+              </dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   )
@@ -286,7 +299,7 @@ function Studies() {
         </div>
         <div className="gallery">
           {elsewhere.map((p, i) => (
-            <article key={p.title} className="frame" data-speed={[0.9, 1.15, 1, 1.2, 0.95, 1.1, 1.05][i % 7]}>
+            <article key={p.title} className="frame">
               <div className="frame-inner" style={{ '--tilt': `${[-1.4, 0.9, -0.6, 1.2, -1, 0.7, -0.8][i % 7]}deg` } as React.CSSProperties}>
                 <div className="mat">{p.glyph && <Glyph kind={p.glyph} />}</div>
                 {p.caption && <span className="fig-cap">{p.caption}</span>}
@@ -324,7 +337,7 @@ function Catalogue() {
               {upstream.slice(0, 2).map((u) => (
                 <li key={u.where}>
                   <a href={u.href} {...ext(u.href)}>
-                    <strong>{u.where}</strong> <span className="mono tag">{u.state}</span>
+                    <strong>{u.where}</strong> <span className="mono stars">{u.stars}</span> <span className="mono tag">{u.state}</span>
                   </a>
                   <span>{u.what}</span>
                 </li>
@@ -338,6 +351,19 @@ function Catalogue() {
                 <li key={u.where}>
                   <a href={u.href} {...ext(u.href)}>
                     <strong>{u.where}</strong> <Arrow />
+                  </a>
+                  <span>{u.what}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="cv-block ink-in">
+            <h3 className="cv-h mono">Sent upstream · pull requests opened</h3>
+            <ul>
+              {sent.map((u) => (
+                <li key={u.where}>
+                  <a href={u.href} {...ext(u.href)}>
+                    <strong>{u.where}</strong> <span className="mono stars">{u.stars}</span> <Arrow />
                   </a>
                   <span>{u.what}</span>
                 </li>

@@ -42,7 +42,7 @@ function Bucket() {
     <g>
       <path d="M-18 -34 L 18 -34 L 14 0 L -14 0 Z" fill={C.ultraWash} stroke={C.ink} strokeWidth={1.8} />
       <path d="M-16 -32 C -16 -52, 16 -52, 16 -32" fill="none" stroke={C.ink} strokeWidth={1.6} />
-      <text x={0} y={-12} textAnchor="middle" fontFamily={mono} fontSize={9.5} fill={C.paper}>
+      <text x={0} y={-12} textAnchor="middle" fontFamily={mono} fontSize={11.5} fill={C.paper}>
         s3
       </text>
     </g>
@@ -59,7 +59,7 @@ function Server({ f, lock }: { f: number; lock: number }) {
           <circle cx={14} cy={y} r={2.2} fill={Math.floor(f / 5 + y) % 2 ? C.sapWash : C.rule} />
         </g>
       ))}
-      <text x={0} y={-43} textAnchor="middle" fontFamily={mono} fontSize={9} fill={C.graphite}>
+      <text x={0} y={-43} textAnchor="middle" fontFamily={mono} fontSize={11} fill={C.graphite}>
         ec2
       </text>
       {lock >= 0 && (
@@ -139,7 +139,7 @@ export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({
         <text x={888} y={446} textAnchor="middle" fontFamily={serifItalic} fontSize={18} fill={C.ink}>
           Aegis
         </text>
-        <text x={888} y={462} textAnchor="middle" fontFamily={mono} fontSize={10.5} fill={C.graphite}>
+        <text x={888} y={462} textAnchor="middle" fontFamily={mono} fontSize={12.5} fill={C.graphite}>
           cloud custodian
         </text>
 
@@ -156,7 +156,7 @@ export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({
           <rect x={80} y={132} width={30} height={22} fill={C.ochreSoft} stroke={C.ink} strokeWidth={1.8} />
         </g>
         <circle cx={96} cy={112} r={6} fill={glitching ? (Math.floor(f / 4) % 2 ? C.vermWash : C.vermilion) : C.sapWash} stroke={C.ink} strokeWidth={1.2} />
-        <text x={40} y={96} fontFamily={mono} fontSize={11} fill={glitching ? C.vermSoft : C.sapSoft}>
+        <text x={40} y={96} fontFamily={mono} fontSize={13} fill={glitching ? C.vermSoft : C.sapSoft}>
           {glitching ? 'platform glitch: create, create, create' : 'glitch contained'}
         </text>
 
@@ -174,9 +174,9 @@ export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({
                 {t.kind === 'bucket' ? <Bucket /> : <Server f={f} lock={t.open ? lock : -1} />}
                 {/* mark: a paper tag with the rule it broke */}
                 {marked && (
-                  <g transform="translate(-6 -58)" opacity={prog(f, markAt(t), markAt(t) + 6)}>
-                    <path d="M0 0 L 58 0 L 64 7 L 58 14 L 0 14 Z" fill={t.open ? C.sapSoft : C.vermSoft} stroke={t.open ? C.sap : C.vermilion} strokeWidth={1.2} />
-                    <text x={5} y={10.5} fontFamily={mono} fontSize={8.5} fill={t.open ? C.sap : C.vermilion}>
+                  <g transform="translate(-6 -62)" opacity={prog(f, markAt(t), markAt(t) + 6)}>
+                    <path d="M0 0 L 88 0 L 95 9 L 88 18 L 0 18 Z" fill={t.open ? C.sapSoft : C.vermSoft} stroke={t.open ? C.sap : C.vermilion} strokeWidth={1.2} />
+                    <text x={6} y={13} fontFamily={mono} fontSize={12} fill={t.open ? C.sap : C.vermilion}>
                       {t.open ? 'ssh revoked' : 'no owner'}
                     </text>
                   </g>
@@ -188,7 +188,7 @@ export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({
           )
         })}
         {/* the open rule on the exposed server, until it is revoked */}
-        <text x={494} y={QUAY - 54} fontFamily={mono} fontSize={10} fill={C.vermSoft} opacity={f >= dropAt(4) + 12 && f < markAt(things[4]) ? 1 : 0}>
+        <text x={452} y={QUAY - 70} fontFamily={mono} fontSize={13} fill={C.vermSoft} opacity={f >= dropAt(4) + 12 && f < markAt(things[4]) ? 1 : 0}>
           22 · 0.0.0.0/0
         </text>
 
@@ -199,7 +199,7 @@ export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({
           <text x={0} y={0} fontFamily={serif} fontSize={16} fill={C.ink}>
             On-call path
           </text>
-          <text x={130} y={0} fontFamily={mono} fontSize={11} fill={C.vermilion}>
+          <text x={130} y={0} fontFamily={mono} fontSize={13} fill={C.vermilion}>
             4 to 24 hours
           </text>
           {onCallSteps.map((s, i) => {
@@ -207,20 +207,20 @@ export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({
             return (
               <g key={s} transform={`translate(${(i % perRow) * (chipW + 8)} ${12 + Math.floor(i / perRow) * 30})`}>
                 <rect x={0} y={0} width={chipW} height={24} rx={12} fill={lit ? C.vermSoft : C.paper} stroke={lit ? C.vermilion : C.rule} strokeWidth={1.2} />
-                <text x={chipW / 2} y={16} textAnchor="middle" fontFamily={mono} fontSize={11} fill={lit ? C.vermilion : C.faint}>
+                <text x={chipW / 2} y={16} textAnchor="middle" fontFamily={mono} fontSize={13} fill={lit ? C.vermilion : C.faint}>
                   {s}
                 </text>
               </g>
             )
           })}
-          <text x={Math.max(0, onCallLit - 1) * (chipW + 8) + 4} y={narrow ? 82 : 52} fontFamily={mono} fontSize={10.5} fill={C.vermilion} opacity={f > 262 ? 1 : 0}>
+          <text x={Math.max(0, onCallLit - 1) * (chipW + 8) + 4} y={narrow ? 82 : 52} fontFamily={mono} fontSize={12.5} fill={C.vermilion} opacity={f > 262 ? 1 : 0}>
             ↑ still here when Aegis is done
           </text>
           <g transform={`translate(0 ${narrow ? 44 : 0})`}>
           <text x={0} y={70} fontFamily={serif} fontSize={16} fill={C.ink}>
             Aegis
           </text>
-          <text x={130} y={70} fontFamily={mono} fontSize={11} fill={C.sap}>
+          <text x={130} y={70} fontFamily={mono} fontSize={13} fill={C.sap}>
             under 2 minutes, 0 manual steps
           </text>
           {['detect', 'mark', 'sweep'].map((s, i) => {
@@ -228,7 +228,7 @@ export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({
             return (
               <g key={s} transform={`translate(${i * (chipW + 8)} 82)`}>
                 <rect x={0} y={0} width={chipW} height={24} rx={12} fill={lit ? C.sapSoft : C.paper} stroke={lit ? C.sap : C.rule} strokeWidth={1.2} />
-                <text x={chipW / 2} y={16} textAnchor="middle" fontFamily={mono} fontSize={11} fill={lit ? C.sap : C.faint}>
+                <text x={chipW / 2} y={16} textAnchor="middle" fontFamily={mono} fontSize={13} fill={lit ? C.sap : C.faint}>
                   {s}
                 </text>
               </g>

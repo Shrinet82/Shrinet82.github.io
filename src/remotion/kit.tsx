@@ -15,8 +15,8 @@ export const sans = loadInstrument('normal', { weights: ['400', '500'], subsets:
 
 export const C = {
   ink: '#1c1a17',
-  graphite: '#5b574f',
-  faint: '#8d877c',
+  graphite: '#4d4943',
+  faint: '#736d62',
   paper: '#fbf8f2',
   paper2: '#f3eee4',
   rule: '#d8cfbf',
@@ -51,8 +51,8 @@ export const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 export const osc = (f: number, period: number, phase = 0) => Math.sin((f / period + phase) * Math.PI * 2)
 
 // Ink lines "boil" like hand-drawn animation: the wobble changes every few
-// frames, never smoothly.
-export const boilSeed = (f: number) => 3 + (Math.floor(f / 4) % 3)
+// frames, never smoothly. Slow and slight, so scrubbing never blurs a line.
+export const boilSeed = (f: number) => 3 + (Math.floor(f / 8) % 3)
 
 function WashFilter({ id }: { id: string }) {
   return (
@@ -110,7 +110,7 @@ export function Defs({ id, f, deckle }: { id: string; f: number; deckle?: { w: n
           frame, and finer noise is lost under the displacement and blur. */}
       <filter id={`${id}-rough`} x="-5%" y="-5%" width="110%" height="110%">
         <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="1" seed={boilSeed(f)} />
-        <feDisplacementMap in="SourceGraphic" scale="2.4" />
+        <feDisplacementMap in="SourceGraphic" scale="1.5" />
       </filter>
       <WashFilter id={`${id}-wash`} />
       <pattern id={`${id}-hatch`} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(40)">
@@ -225,12 +225,12 @@ export function seaPath(width: number, y: number, amp: number, len: number, bott
 
 export function Chip({ x, y, tone, text, opacity = 1 }: { x: number; y: number; tone: 'ok' | 'bad' | 'info'; text: string; opacity?: number }) {
   const col = tone === 'ok' ? C.sap : tone === 'bad' ? C.vermilion : C.ultra
-  const w = text.length * 7.6 + 34
+  const w = text.length * 8.4 + 36
   return (
     <g opacity={opacity} transform={`translate(${x} ${y})`}>
       <rect width={w} height={26} rx={13} fill={C.paper} stroke={col} strokeWidth={1.4} />
       <circle cx={14} cy={13} r={4.5} fill={col} />
-      <text x={26} y={17.5} fontFamily={mono} fontSize={12.5} fill={col}>
+      <text x={26} y={17.5} fontFamily={mono} fontSize={14} fill={col}>
         {text}
       </text>
     </g>
