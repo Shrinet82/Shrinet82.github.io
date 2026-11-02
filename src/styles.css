@@ -793,16 +793,112 @@ em {
   align-items: center;
 }
 
-/* Plates I-IV: Remotion films, scrubbed by scroll */
-.film {
-  margin: 0 0 8px;
-}
-.film-wide,
-.conveyor {
+/* Plates I-IV: Remotion films. Each pins under the top bar for --len of
+   scroll while the scroll plays it, holds its last frame, then leaves with
+   the page. The film sizes itself to whatever room the screen has. */
+.film-stage {
   position: relative;
-  left: 50%;
-  width: min(1600px, 100vw - var(--gutter) * 2);
-  translate: -50% 0;
+  height: calc(100vh + var(--len));
+}
+.film-pin {
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
+  height: calc(100svh - 64px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: calc(var(--max) + var(--gutter) * 2);
+  margin: 0 auto;
+  padding: 16px var(--gutter) 20px;
+}
+.film-stage-wide .film-pin {
+  max-width: calc(1600px + var(--gutter) * 2);
+}
+.film-box {
+  flex: 1 1 auto;
+  min-height: 0;
+  container-type: size;
+  display: grid;
+  place-items: center;
+}
+.film-fit {
+  width: min(100cqw, 100cqh * var(--ar));
+}
+.film-caption {
+  flex: none;
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 40px;
+  align-items: end;
+  padding-top: 12px;
+  border-top: 1px solid var(--ink);
+}
+.film-steps {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  color: var(--faint);
+}
+.film-steps li {
+  transition: color 150ms ease;
+}
+.film-steps li.done {
+  color: var(--graphite);
+}
+.film-steps li.on {
+  color: var(--ink);
+}
+.film-steps .mono {
+  font-size: 12px;
+  margin-right: 4px;
+}
+.film-steps li.on .mono {
+  color: var(--ochre);
+}
+.film-now {
+  margin: 0;
+  min-height: 2.7em;
+  font-family: var(--display);
+  font-size: clamp(17px, 1.7vw, 23px);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.film-now .mono {
+  margin-right: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ochre);
+  vertical-align: 0.15em;
+}
+.film-title {
+  display: none;
+}
+.film-clock {
+  margin: 0;
+  display: grid;
+  justify-items: end;
+}
+.film-clock .mono {
+  font-size: 12px;
+  color: var(--faint);
+}
+.film-clock strong {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1;
+  color: var(--sap);
+  font-variant-numeric: tabular-nums;
 }
 
 .ship-foot {
@@ -1187,15 +1283,6 @@ em {
 
 /* ---------- Responsive ---------- */
 
-@media (min-width: 960px) and (min-height: 700px) {
-  .stage {
-    min-height: 76vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-}
-
 @media (max-width: 1000px) {
   .hero-grid,
   .two,
@@ -1250,6 +1337,37 @@ em {
 @media (max-width: 640px) {
   body {
     font-size: 16px;
+  }
+  /* phones: the caption is the step on screen, its number, and the clock */
+  .film-pin {
+    gap: 10px;
+    padding-top: 10px;
+    padding-bottom: 14px;
+  }
+  .film-steps {
+    display: none;
+  }
+  .film-caption {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .film-now {
+    min-height: 4.1em;
+    font-size: 17px;
+  }
+  .film-title {
+    display: inline;
+    font-weight: 500;
+  }
+  .film-clock {
+    justify-items: start;
+    grid-row: 1;
+    grid-auto-flow: column;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .film-clock strong {
+    font-size: 24px;
   }
   .gallery {
     grid-template-columns: 1fr;

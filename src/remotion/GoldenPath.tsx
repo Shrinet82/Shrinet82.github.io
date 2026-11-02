@@ -7,8 +7,9 @@ import { C, Defs, clamp, ease, lerp, mono, prog, sans, serif, serifItalic } from
 // Timings are the measured OPSIE numbers.
 
 export const GOLDEN = { width: 960, height: 620, fps: 30, durationInFrames: 300 }
-// Phones: the two panels stack and the timings run down one column.
-export const GOLDEN_NARROW = { width: 476, height: 1296 }
+// Phones: one panel at a time. The camera holds on Before, then pans to
+// After; the timings run down one column underneath. Short enough to pin.
+export const GOLDEN_NARROW = { width: 476, height: 840 }
 const ID = 'gp'
 
 const rows = [
@@ -76,12 +77,14 @@ export const GoldenPath: React.FC<{ narrow?: boolean }> = ({ narrow = false }) =
   const pipe = prog(f, 202, 252, ease.inOut)
   const card = prog(f, 252, 272, ease.out)
   const bars = prog(f, 262, 298, ease.inOut)
+  const camX = narrow ? interpolate(f, [128, 162], [0, -484], { ...clamp, easing: ease.inOut }) : 0
 
   return (
     <AbsoluteFill>
       <svg viewBox={narrow ? `0 0 ${GOLDEN_NARROW.width} ${GOLDEN_NARROW.height}` : '0 0 960 620'} width="100%" height="100%">
         <Defs id={ID} f={f} />
 
+        <g transform={`translate(${camX} 0)`}>
         {/* BEFORE */}
         <Panel x={16} active={f < 150 ? 1 : 0} title="Before" sub="a ticket for every bucket">
           <Clock cx={130} cy={190} r={74} minutes={leftMin} tone={C.vermWash} />
@@ -125,7 +128,6 @@ export const GoldenPath: React.FC<{ narrow?: boolean }> = ({ narrow = false }) =
         </Panel>
 
         {/* AFTER */}
-        <g transform={narrow ? 'translate(-484 470)' : undefined}>
         <Panel x={500} active={f >= 150 ? 1 : 0} title="After" sub="one golden path">
           {/* stopwatch */}
           <Clock cx={872} cy={126} r={30} minutes={rightMin} tone={C.ultraWash} />
@@ -207,7 +209,7 @@ export const GoldenPath: React.FC<{ narrow?: boolean }> = ({ narrow = false }) =
           const w = 220
           const cur = lerp(r.before, r.after, bars)
           return (
-            <Interactive.G key={r.what} name={`Timing ${r.what}`} style={{ translate: narrow ? `0px ${470 + i * 108}px` : '0px 0px' }}>
+            <Interactive.G key={r.what} name={`Timing ${r.what}`} style={{ translate: narrow ? `0px ${i * 112}px` : '0px 0px' }}>
               <text x={x} y={512} fontFamily={serif} fontSize={17} fill={C.ink}>
                 {r.what}
               </text>

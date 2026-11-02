@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
-import { flushSync } from 'react-dom'
+import { memo, useEffect, useRef, useState } from 'react'
 import { Player, Thumbnail, type PlayerRef } from '@remotion/player'
 import { Harbour, HARBOUR } from './Harbour'
 import { GoldenPath, GOLDEN, GOLDEN_NARROW } from './GoldenPath'
@@ -7,32 +6,18 @@ import { Conveyor, CONVEYOR, WORLD } from './Conveyor'
 import { Lighthouse, LIGHTHOUSE, LIGHTHOUSE_NARROW } from './Lighthouse'
 import { Loop, LOOP } from './Loop'
 
-// Scroll-driven compositions: motion.ts seeks these frame by frame.
-export const SCRUBS = {
-  golden: { selector: '[data-scrub="golden"]', frames: GOLDEN.durationInFrames, pinned: false, length: 0 },
-  conveyor: { selector: '[data-stage="ship"]', frames: CONVEYOR.durationInFrames, pinned: true, length: 190 },
-  lighthouse: { selector: '[data-scrub="lighthouse"]', frames: LIGHTHOUSE.durationInFrames, pinned: false, length: 0 },
-  loop: { selector: '[data-stage="heal"]', frames: LOOP.durationInFrames, pinned: true, length: 260 },
+// Frame counts of the scroll-driven films, for captions that follow along.
+export const FRAMES = {
+  golden: GOLDEN.durationInFrames,
+  conveyor: CONVEYOR.durationInFrames,
+  lighthouse: LIGHTHOUSE.durationInFrames,
+  loop: LOOP.durationInFrames,
 }
-type Name = keyof typeof SCRUBS
-const setters: Partial<Record<Name, (frame: number) => void>> = {}
-const shown: Partial<Record<Name, number>> = {}
 
-// Show the frame for scroll progress p. The render is flushed synchronously,
-// inside the same animation frame that moved the page, so the picture never
-// trails the scroll. Calls made while React is mid-commit are deferred a frame.
-export function scrubTo(name: Name, p: number) {
-  const set = setters[name]
-  if (!set) return
-  const frame = Math.round(Math.min(1, Math.max(0, p)) * (SCRUBS[name].frames - 1))
-  if (frame === shown[name]) return
-  shown[name] = frame
-  try {
-    flushSync(() => set(frame))
-  } catch {
-    set(frame)
-  }
-}
+// A film finishes at 86% of its pinned scroll and holds its last frame for
+// the rest, so the finished picture is on screen before the page moves on.
+const HOLD = 0.86
+export const frameAt = (p: number, frames: number) => Math.round(Math.min(1, Math.max(0, p) / HOLD) * (frames - 1))
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -96,10 +81,12 @@ export function HarbourPlayer() {
   )
 }
 
-// A composition the scroll plays. It rests on its last frame, so without JS
-// (or with reduced motion) it shows the finished picture.
-function Scrubbed({
+// A composition the scroll plays: Thumbnail renders exactly the frame asked
+// for, with no playback clock of its own. --ar lets CSS fit it to the pinned
+// stage. Without JS (or with reduced motion) it shows the finished picture.
+const Scrubbed = memo(function Scrubbed({
   name,
+  progress,
   label,
   component,
   width,
@@ -107,7 +94,8 @@ function Scrubbed({
   frames,
   inputProps,
 }: {
-  name: Name
+  name: keyof typeof FRAMES
+  progress: number
   label: string
   component: React.ComponentType<any>
   width: number
@@ -115,16 +103,8 @@ function Scrubbed({
   frames: number
   inputProps?: Record<string, unknown>
 }) {
-  const [frame, setFrame] = useState(frames - 1)
-  useEffect(() => {
-    setters[name] = setFrame
-    return () => {
-      delete setters[name]
-      delete shown[name]
-    }
-  }, [name])
   return (
-    <div role="img" aria-label={label} data-scrub={name}>
+    <div className="film-fit" role="img" aria-label={label} data-scrub={name} style={{ '--ar': width / height } as React.CSSProperties}>
       <Thumbnail
         key={width}
         component={component}
@@ -133,18 +113,21 @@ function Scrubbed({
         compositionWidth={width}
         compositionHeight={height}
         fps={30}
-        frameToDisplay={frame}
+        frameToDisplay={frameAt(progress, frames)}
         style={{ width: '100%', aspectRatio: `${width} / ${height}` }}
       />
     </div>
   )
-}
+})
 
-export function GoldenPathPlayer() {
+type Film = { progress: number }
+
+export function GoldenPathPlayer({ progress }: Film) {
   const narrow = useNarrow()
   const size = narrow ? GOLDEN_NARROW : GOLDEN
   return (
     <Scrubbed
+      progress={progress}
       name="golden"
       label="Animation: before, tickets pile up while a clock reaches 45 minutes; after, a Backstage golden-path form runs Terraform, Infracost and OIDC and lands the bucket in the catalog at 8 minutes."
       component={GoldenPath}
@@ -156,12 +139,13 @@ export function GoldenPathPlayer() {
   )
 }
 
-export function ConveyorPlayer() {
+export function ConveyorPlayer({ progress }: Film) {
   const narrow = useNarrow()
   const phone = usePhone()
   const width = phone ? 440 : narrow ? 640 : WORLD
   return (
     <Scrubbed
+      progress={progress}
       name="conveyor"
       label="Animation: a Docker image rides a conveyor through secret and IaC scanning, quality checks, and a Trivy X-ray that flags two critical CVEs in its dependencies layer, which is upgraded. A crane loads it onto the cluster's ship, where OWASP ZAP and a smoke test verify it."
       component={Conveyor}
@@ -173,12 +157,13 @@ export function ConveyorPlayer() {
   )
 }
 
-export function LighthousePlayer() {
+export function LighthousePlayer({ progress }: Film) {
   const narrow = useNarrow()
   const phone = usePhone()
   const size = narrow ? { ...LIGHTHOUSE_NARROW, width: phone ? 440 : LIGHTHOUSE_NARROW.width } : LIGHTHOUSE
   return (
     <Scrubbed
+      progress={progress}
       name="lighthouse"
       label="Animation: a glitch keeps stacking buckets and servers on the quay at night. The Aegis lighthouse sweeps its beam, tags each resource that breaks a rule, sweeps them away and revokes an open SSH rule, in under two minutes."
       component={Lighthouse}
@@ -190,11 +175,12 @@ export function LighthousePlayer() {
   )
 }
 
-export function LoopPlayer() {
+export function LoopPlayer({ progress }: Film) {
   const narrow = useNarrow()
   const width = narrow ? 460 : 1400
   return (
     <Scrubbed
+      progress={progress}
       name="loop"
       label="Animation: the Aegis Observe loop in five panels. A 504 spike is detected through SigNoz logs, an LLM picks one tool past a confidence gate, a Slack card asks a human who taps PR, the pull request merges and ArgoCD syncs, and latency returns under the SLO."
       component={Loop}

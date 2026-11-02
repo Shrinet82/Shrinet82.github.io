@@ -3,20 +3,17 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
 import { useGSAP } from '@gsap/react'
 import { scenes } from './sceneMotion'
-import { scrubTo, SCRUBS } from './remotion/players'
 
 gsap.registerPlugin(ScrollTrigger, SplitText, useGSAP)
 
 // Markup is written in its finished state; everything here animates *from*
 // an earlier state, so reduced motion (or no JS) shows the complete page.
-// Past the hero's opening, every animation is tied to the scroll position
+// The four films are pinned and driven by scroll.ts (see App.tsx). Past the
+// hero's opening, every other animation here is tied to the scroll position
 // itself: no smoothing, no timers, nothing drifting at its own speed. Scroll
 // down and it plays; scroll back up and it plays in reverse, in step.
 const OUT = 'expo.out'
-type Opts = { pin: boolean }
 type Cleanup = void | (() => void)
-
-const minsec = (s: number) => `${Math.floor(s / 60)}m ${String(Math.round(s % 60)).padStart(2, '0')}s`
 
 // Prepare an SVG stroke so it can be drawn by animating dashoffset.
 function inkable(el: SVGGeometryElement) {
@@ -121,37 +118,6 @@ function plates(root: HTMLElement) {
     if (w.querySelector('svg.scene')) rise(w, 28)
   })
   root.querySelectorAll('.ink-in').forEach((el) => rise(el))
-}
-
-// Plates I-IV are Remotion compositions whose frame is the scroll position.
-// Ship and Heal pin while they play; Provision and Govern play as they pass.
-function scrubbed(root: HTMLElement, name: keyof typeof SCRUBS, { pin }: Opts, onProgress?: (p: number) => void): Cleanup {
-  const { selector, pinned, length } = SCRUBS[name]
-  const stage = root.querySelector<HTMLElement>(selector)
-  if (!stage) return
-  const update = (p: number) => {
-    scrubTo(name, p)
-    onProgress?.(p)
-  }
-  const st = ScrollTrigger.create(
-    pin && pinned
-      ? { trigger: stage, start: 'top 10%', end: `+=${length}%`, pin: true, refreshPriority: 1, onUpdate: (s) => update(s.progress) }
-      : { trigger: stage, start: 'top 85%', end: 'bottom 40%', onUpdate: (s) => update(s.progress) },
-  )
-  // match wherever the page already is (a reload halfway down, a #link)
-  const raf = requestAnimationFrame(() => update(st.progress))
-  return () => {
-    cancelAnimationFrame(raf)
-    update(1)
-  }
-}
-
-function shipCounter(root: HTMLElement) {
-  const total = root.querySelector('.ship-total')
-  const wall = 32 * 60 + 52
-  return (p: number) => {
-    if (total) total.textContent = minsec(p * wall)
-  }
 }
 
 function tagline(root: HTMLElement) {
@@ -290,19 +256,14 @@ export function setupMotion(root: HTMLElement) {
   mm.add(
     {
       motion: '(prefers-reduced-motion: no-preference)',
-      pin: '(min-width: 960px) and (min-height: 700px) and (prefers-reduced-motion: no-preference)',
       wide: '(min-width: 1180px)',
     },
     (ctx) => {
-      const { motion, pin, wide } = ctx.conditions as { motion: boolean; pin: boolean; wide: boolean }
+      const { motion, wide } = ctx.conditions as { motion: boolean; wide: boolean }
       if (!motion) return
       const cleanups: Cleanup[] = []
       hero(root)
       plates(root)
-      cleanups.push(scrubbed(root, 'golden', { pin }))
-      cleanups.push(scrubbed(root, 'conveyor', { pin }, shipCounter(root)))
-      cleanups.push(scrubbed(root, 'lighthouse', { pin }))
-      cleanups.push(scrubbed(root, 'loop', { pin }))
       tagline(root)
       cleanups.push(studies(root))
       letters(root)

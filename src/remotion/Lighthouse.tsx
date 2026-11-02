@@ -87,7 +87,7 @@ export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({
   const aegis = prog(f, 150, 262, ease.inOut)
   const beamRad = (beamAngle * Math.PI) / 180
   // narrow camera: the quay, the lighthouse lighting up, then along the beam
-  const focus = interpolate(f, [0, 140, 166, 180, 222, 262, 300], [360, 360, 820, 640, 250, 300, 420], { ...clamp, easing: ease.inOut })
+  const focus = interpolate(f, [0, 110, 166, 180, 222, 262, 300], [220, 330, 820, 640, 250, 300, 420], { ...clamp, easing: ease.inOut })
   const camX = narrow ? Math.min(0, Math.max(viewWidth - 1000, viewWidth / 2 - focus)) : 0
   const chipW = narrow ? 84 : 88
   const perRow = narrow ? 4 : 7
@@ -109,11 +109,17 @@ export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({
           <circle key={i} cx={x} cy={y} r={1.8} fill={C.moon} opacity={0.5 + 0.5 * Math.abs(osc(f, 50, i * 0.3))} />
         ))}
 
-        {/* the beam, drawn under the quay objects so they catch its light */}
+        {/* the beam, drawn under the quay objects so they catch its light;
+            bright at the lamp and fading with distance */}
+        <linearGradient id={`${ID}-beam`} gradientUnits="userSpaceOnUse" x1={LAMP.x} y1={LAMP.y} x2={LAMP.x + Math.cos(beamRad) * 820} y2={LAMP.y + Math.sin(beamRad) * 820}>
+          <stop offset="0" stopColor={C.moon} stopOpacity={0.85} />
+          <stop offset="0.55" stopColor={C.moon} stopOpacity={0.4} />
+          <stop offset="1" stopColor={C.moon} stopOpacity={0.06} />
+        </linearGradient>
         <path
           d={`M ${LAMP.x} ${LAMP.y} L ${LAMP.x + Math.cos(beamRad - 0.08) * 1000} ${LAMP.y + Math.sin(beamRad - 0.08) * 1000} L ${LAMP.x + Math.cos(beamRad + 0.08) * 1000} ${LAMP.y + Math.sin(beamRad + 0.08) * 1000} Z`}
-          fill={C.moon}
-          opacity={lampOn * 0.34}
+          fill={`url(#${ID}-beam)`}
+          opacity={lampOn * 0.7}
         />
 
         {/* sea and the lighthouse rock */}
@@ -136,10 +142,10 @@ export const Lighthouse: React.FC<{ narrow?: boolean; viewWidth?: number }> = ({
           <rect x={860} y={186} width={56} height={8} fill={C.paper} stroke={C.ink} strokeWidth={1.6} />
         </g>
         <circle cx={LAMP.x} cy={LAMP.y} r={30 * lampOn} fill={C.moon} opacity={0.35 * lampOn} filter={`url(#${ID}-wash)`} />
-        <text x={888} y={446} textAnchor="middle" fontFamily={serifItalic} fontSize={18} fill={C.ink}>
+        <text x={888} y={468} textAnchor="middle" fontFamily={serifItalic} fontSize={20} fill={C.ink}>
           Aegis
         </text>
-        <text x={888} y={462} textAnchor="middle" fontFamily={mono} fontSize={12.5} fill={C.graphite}>
+        <text x={888} y={486} textAnchor="middle" fontFamily={mono} fontSize={13} fill={C.graphite}>
           cloud custodian
         </text>
 

@@ -3,12 +3,14 @@ import { useGSAP } from '@gsap/react'
 import { setupMotion } from './motion'
 import Glyph from './Glyphs'
 import { DeskScene, EaselScene } from './Scenes'
-import { ConveyorPlayer, GoldenPathPlayer, HarbourPlayer, LighthousePlayer, LoopPlayer } from './remotion/players'
+import { ConveyorPlayer, FRAMES, frameAt, GoldenPathPlayer, HarbourPlayer, LighthousePlayer, LoopPlayer } from './remotion/players'
+import { useScrollProgress } from './scroll'
 import {
   awards,
   certs,
   education,
   elsewhere,
+  filmSteps,
   ledger,
   pipeline,
   plates,
@@ -105,6 +107,55 @@ function PlateHead({
   )
 }
 
+// A film pinned under the top bar while the scroll plays it. The section is
+// taller than the screen by `len`; the film stays put for that distance,
+// finishes, holds its last frame, then scrolls away with the page. The
+// caption under it names the step on screen.
+function Film({
+  name,
+  len,
+  wide = false,
+  aside,
+  children,
+}: {
+  name: keyof typeof FRAMES
+  len: number
+  wide?: boolean
+  aside?: (frame: number) => React.ReactNode
+  children: (progress: number) => React.ReactNode
+}) {
+  const [ref, p] = useScrollProgress<HTMLDivElement>()
+  const steps = filmSteps[name]
+  const frame = frameAt(p, FRAMES[name])
+  let on = 0
+  steps.forEach((s, i) => frame >= s.at && (on = i))
+  return (
+    <div ref={ref} className={`film-stage ${wide ? 'film-stage-wide' : ''}`} style={{ '--len': `${len}vh` } as React.CSSProperties}>
+      <div className="film-pin">
+        <div className="film-box">{children(p)}</div>
+        <div className="film-caption">
+          <ol className="film-steps" aria-hidden="true">
+            {steps.map((s, i) => (
+              <li key={s.title} className={i === on ? 'on' : i < on ? 'done' : undefined}>
+                <span className="mono">{String(i + 1).padStart(2, '0')}</span> {s.title}
+              </li>
+            ))}
+          </ol>
+          <p className="film-now" aria-live="off">
+            <span className="mono">
+              fig. {on + 1} of {steps.length}
+            </span>{' '}
+            <b className="film-title">{steps[on].title}.</b> {steps[on].text}
+          </p>
+          {aside?.(frame)}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const minsec = (s: number) => `${Math.floor(s / 60)}m ${String(Math.round(s % 60)).padStart(2, '0')}s`
+
 function Topbar() {
   return (
     <header className="topbar">
@@ -173,9 +224,11 @@ function Provision() {
     <section className="plate" id="provision" data-plate="provision">
       <div className="wrap">
         <PlateHead roman="I" label="Provision" title="Infrastructure used to be a ticket." verse={verses.provision} />
-        <div className="film">
-          <GoldenPathPlayer />
-        </div>
+      </div>
+      <Film name="golden" len={200}>
+        {(p) => <GoldenPathPlayer progress={p} />}
+      </Film>
+      <div className="wrap">
         <div className="two facts">
           <p className="prose">{provision.newWay}</p>
           <Links links={repos.opsie} />
@@ -191,14 +244,24 @@ function Ship() {
       <div className="wrap">
         <PlateHead roman="II" label="Ship" title="Every image rides through five checks." verse={verses.ship} />
       </div>
-      <div className="wrap stage" data-stage="ship">
-        <div className="conveyor">
-          <ConveyorPlayer />
-        </div>
+      <Film
+        name="conveyor"
+        len={280}
+        wide
+        aside={(frame) => (
+          <p className="film-clock">
+            <span className="mono">commit → verified deploy</span>
+            <strong>{minsec(((32 * 60 + 52) * frame) / (FRAMES.conveyor - 1))}</strong>
+          </p>
+        )}
+      >
+        {(p) => <ConveyorPlayer progress={p} />}
+      </Film>
+      <div className="wrap">
         <div className="ship-foot">
           <p className="big-num">
             <span className="mono">commit → verified deploy</span>
-            <strong className="ship-total">{pipeline.total}</strong>
+            <strong>{pipeline.total}</strong>
           </p>
           <div>
             <p className="prose">
@@ -219,9 +282,11 @@ function Govern() {
     <section className="plate" id="govern" data-plate="govern">
       <div className="wrap">
         <PlateHead roman="III" label="Govern" title="Then a glitch started spawning buckets." verse={verses.govern} />
-        <div className="film">
-          <LighthousePlayer />
-        </div>
+      </div>
+      <Film name="lighthouse" len={220}>
+        {(p) => <LighthousePlayer progress={p} />}
+      </Film>
+      <div className="wrap">
         <div className="two facts">
           <p className="prose">
             <strong className="fact">Mark, then sweep.</strong> Cloud Custodian policies run across AWS and Azure:
@@ -247,10 +312,10 @@ function Heal() {
       <div className="wrap">
         <PlateHead roman="IV" label="Heal" title="So I taught the cluster to open its own PRs." verse={verses.heal} />
       </div>
-      <div className="wrap stage" data-stage="heal">
-        <div className="film film-wide">
-          <LoopPlayer />
-        </div>
+      <Film name="loop" len={300} wide>
+        {(p) => <LoopPlayer progress={p} />}
+      </Film>
+      <div className="wrap">
         <div className="heal-foot">
           <p className="prose">
             Aegis Observe: rule-based signal detection over SigNoz, an LLM that selects one remediation, a human who

@@ -246,6 +246,38 @@ export const verses = {
   heal: ['It notices. It proposes. It waits for a yes,', 'then writes the fix down in Git,', 'where everything worth keeping is kept.'],
 }
 
+// Captions for the pinned films. `at` is the composition frame where each
+// step begins; the caption under a film follows the scroll with it.
+export type FilmStep = { at: number; title: string; text: string }
+export const filmSteps: Record<'golden' | 'conveyor' | 'lighthouse' | 'loop', FilmStep[]> = {
+  golden: [
+    { at: 0, title: 'The queue', text: 'Every bucket was a ticket: six manual steps and 45 minutes of waiting.' },
+    { at: 150, title: 'One form', text: 'Instead, a developer fills one Backstage golden-path form.' },
+    { at: 200, title: 'The pipeline', text: 'Terraform plans, Infracost checks the budget, OIDC applies with no stored keys.' },
+    { at: 252, title: 'Catalogued', text: 'It lands in the catalog. S3 in 8 minutes, a VPC in 12, an app on Kubernetes in 10.' },
+  ],
+  conveyor: [
+    { at: 0, title: 'Security gates', text: 'Gitleaks and Checkov: no secrets in the code, no holes in the IaC.' },
+    { at: 120, title: 'App quality', text: 'Probes drop in: backend and frontend checks both have to pass.' },
+    { at: 200, title: 'Build factory', text: 'Trivy X-rays every layer. Two critical CVEs in the dependencies: upgraded, rebuilt, SBOM printed.' },
+    { at: 310, title: 'Delivery', text: 'The crane loads the image onto the cluster: a rollout to AKS.' },
+    { at: 400, title: 'Verification', text: 'OWASP ZAP and a smoke test against the running app. Secrets arrive from Key Vault.' },
+  ],
+  lighthouse: [
+    { at: 0, title: 'The glitch', text: 'A platform glitch keeps creating buckets and servers. One has SSH open to the world.' },
+    { at: 145, title: 'Mark', text: 'The Aegis lighthouse runs Cloud Custodian: everything that breaks a rule gets tagged.' },
+    { at: 232, title: 'Sweep', text: 'The sweep removes the strays and revokes the open SSH rule, with an audit trail.' },
+    { at: 290, title: 'Contained', text: 'Under 2 minutes, 0 manual steps. The on-call path would still be on step two.' },
+  ],
+  loop: [
+    { at: 0, title: 'Detect', text: 'A 504 spike. The agent searches SigNoz logs for known signatures.' },
+    { at: 100, title: 'Decide', text: 'An LLM picks exactly one remediation. Low confidence stops it here.' },
+    { at: 200, title: 'Ask', text: 'A Slack card offers Approve, PR or Reject. The incident stays locked until a human answers.' },
+    { at: 300, title: 'Fix', text: 'A pull request with the reasoning, merged and synced by ArgoCD.' },
+    { at: 400, title: 'Verify', text: 'Latency back under the SLO, and the agent traces itself in OpenTelemetry.' },
+  ],
+}
+
 export const plates = [
   { id: 'provision', roman: 'I', label: 'Provision' },
   { id: 'ship', roman: 'II', label: 'Ship' },
