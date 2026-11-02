@@ -5,6 +5,7 @@ import Glyph from './Glyphs'
 import { DeskScene, EaselScene } from './Scenes'
 import { ConveyorPlayer, FPS, FRAMES, frameAt, GoldenPathPlayer, HarbourPlayer, LighthousePlayer, LoopPlayer } from './remotion/players'
 import { useScrollProgress } from './scroll'
+import { pipelineSecs } from './remotion/Conveyor'
 import {
   awards,
   certs,
@@ -121,7 +122,7 @@ function Film({
   name: keyof typeof FRAMES
   len: number
   wide?: boolean
-  aside?: (frame: number) => React.ReactNode
+  aside?: (beat: number) => React.ReactNode
   children: (progress: number) => React.ReactNode
 }) {
   const [ref, p] = useScrollProgress<HTMLDivElement>()
@@ -148,7 +149,7 @@ function Film({
             </span>{' '}
             <b className="film-title">{steps[on].title}.</b> {steps[on].text}
           </p>
-          {aside?.(frame)}
+          {aside?.(beat)}
         </div>
       </div>
     </div>
@@ -249,10 +250,10 @@ function Ship() {
         name="conveyor"
         len={280}
         wide
-        aside={(frame) => (
+        aside={(beat) => (
           <p className="film-clock">
             <span className="mono">commit → verified deploy</span>
-            <strong>{minsec(((32 * 60 + 52) * frame) / (FRAMES.conveyor - 1))}</strong>
+            <strong>{minsec(pipelineSecs(beat))}</strong>
           </p>
         )}
       >

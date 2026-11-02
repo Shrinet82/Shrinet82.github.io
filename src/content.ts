@@ -257,11 +257,11 @@ export const filmSteps: Record<'golden' | 'conveyor' | 'lighthouse' | 'loop', Fi
     { at: 262, title: 'Catalogued', text: 'Applied, tagged and in the catalog by itself. S3 in 8 minutes, a VPC in 12, an app in 10.' },
   ],
   conveyor: [
-    { at: 0, title: 'Security gates', text: 'Gitleaks and Checkov: no secrets in the code, no holes in the IaC.' },
-    { at: 120, title: 'App quality', text: 'Probes drop in: backend and frontend checks both have to pass.' },
-    { at: 200, title: 'Build factory', text: 'Trivy X-rays every layer. Two critical CVEs in the dependencies: upgraded, rebuilt, SBOM printed.' },
-    { at: 310, title: 'Delivery', text: 'The crane loads the image onto the cluster: a rollout to AKS.' },
-    { at: 400, title: 'Verification', text: 'OWASP ZAP and a smoke test against the running app. Secrets arrive from Key Vault.' },
+    { at: 0, title: 'Security gates', text: 'Gitleaks finds no secrets in the code; Checkov passes the IaC, 9 checks skipped.' },
+    { at: 120, title: 'App quality', text: 'Probes drop in: the backend tests and the frontend build both have to pass.' },
+    { at: 200, title: 'Build factory', text: 'Trivy flags 2 critical CVEs, in h11 and httpx. Upgraded, re-scanned to zero, SBOM printed, pushed to ACR.' },
+    { at: 310, title: 'Delivery', text: 'The crane rolls the image out to the cluster: AKS, two nodes.' },
+    { at: 400, title: 'Verification', text: 'Key Vault hands it its secrets over CSI; OWASP ZAP and a smoke test check the live app.' },
   ],
   lighthouse: [
     { at: 0, title: 'The glitch', text: 'A platform glitch keeps creating buckets and servers. One has SSH open to the world.' },

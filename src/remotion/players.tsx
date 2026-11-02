@@ -159,6 +159,7 @@ export function ConveyorPlayer({ progress }: Film) {
       width={width}
       height={CONVEYOR.height}
       frames={CONVEYOR.durationInFrames}
+      fps={CONVEYOR.fps}
       inputProps={{ viewWidth: width }}
     />
   )

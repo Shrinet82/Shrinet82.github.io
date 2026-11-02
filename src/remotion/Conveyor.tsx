@@ -1,16 +1,26 @@
-import { AbsoluteFill, Interactive, Sequence, interpolate, useCurrentFrame } from 'remotion'
+import { AbsoluteFill, Interactive, interpolate, useCurrentFrame } from 'remotion'
 import { pipeline } from '../content'
 import { Box, C, Defs, Helm, WashLayer, clamp, ease, lerp, mono, osc, prog, seaPath, serif } from './kit'
 
-// Plate II (zero-trust DevSecOps). Scroll-scrubbed: the scroll position is
-// the frame. One Docker image rides the belt through the gates. Security
-// scans it in a light curtain, quality probes it, the build factory X-rays
-// its layers: the dependencies layer carries 2 critical CVEs, is swapped for
-// an upgraded one, and an SBOM prints. The quay crane loads it onto the
-// cluster's ship, where OWASP ZAP probes it and the smoke test runs.
+// Plate II (zero-trust DevSecOps), true to the project README. One Docker
+// image rides the belt through the five stages. Gitleaks and Checkov scan it
+// in a light curtain (no secrets; 9 checks skipped). Probes run the backend
+// tests and the frontend build. The build factory X-rays it with Trivy: two
+// CRITICAL CVEs, h11 0.9.0 and httpx 0.13.3, are upgraded and re-scanned to
+// zero, a CycloneDX SBOM prints and the image is pushed to ACR. The quay
+// crane rolls it out to the AKS ship (two nodes); Key Vault hands it its
+// secrets through CSI; OWASP ZAP probes it and the smoke test runs.
+//
+// 60 fps, timed in beats of 1/30 s (two frames each), 450 beats in all.
 
 export const WORLD = 1600
-export const CONVEYOR = { height: 540, fps: 30, durationInFrames: 450 }
+export const CONVEYOR = { height: 540, fps: 60, durationInFrames: 900 }
+
+// The pipeline clock: each stage ends at its measured cumulative time, with
+// the queueing between stages (32m 52s total against 26m 49s of stages)
+// spread evenly, so the clock reads 32m 52s exactly when verification ends.
+export const CLOCK = { beats: [0, 110, 190, 300, 406, 446], secs: [0, 339, 600, 1296, 1500, 1972] }
+export const pipelineSecs = (beat: number) => interpolate(beat, CLOCK.beats, CLOCK.secs, clamp)
 const ID = 'cv'
 
 const BELT_TOP = 330
@@ -115,20 +125,28 @@ function TestRig({ f }: { f: number }) {
           <text y={-32} textAnchor="middle" fontFamily={mono} fontSize={13} fill={C.graphite}>
             {g.label}
           </text>
+          <path d="M 30 -10 l 4 4 l 8 -9" fill="none" stroke={C.sap} strokeWidth={2.2} strokeLinecap="round" pathLength={1} strokeDasharray={`${prog(f, g.at + 16, g.at + 22)} 1`} />
         </g>
       ))}
     </g>
   )
 }
 
-// 03: the X-ray booth and its monitor, which shows the image's layers.
+// 03: the X-ray booth and its monitor. Trivy lists the image's layers, flags
+// the dependencies, names the two CVEs, and shows them upgraded on the
+// re-scan. Then the CycloneDX SBOM prints and the image goes to ACR.
 const LAYERS = ['app code', 'dependencies', 'system libs', 'base image']
+const CVES = [
+  { pkg: 'h11', from: '0.9.0', to: '0.16.0', id: 'CVE-2025-43859' },
+  { pkg: 'httpx', from: '0.13.3', to: '0.23.0', id: 'CVE-2021-41945' },
+]
 function BuildFactory({ f }: { f: number }) {
   const scan = interpolate(f, [236, 256], [0, 1], clamp)
   const flagged = f >= 256 && f < 282
-  const swap = prog(f, 266, 284, ease.inOut)
+  const rescan = interpolate(f, [272, 284], [0, 1], clamp)
   const fixed = f >= 284
   const paper = prog(f, 284, 304, ease.soft)
+  const MX = S3 - 120
   return (
     <g>
       {/* the booth */}
@@ -141,51 +159,45 @@ function BuildFactory({ f }: { f: number }) {
       <text x={S3} y={204} textAnchor="middle" fontFamily={mono} fontSize={12.5} letterSpacing={1.4} fill={C.ink}>
         BUILD · TRIVY · SBOM
       </text>
-      {/* x-ray sweep across the booth while scanning */}
+      {/* x-ray sweeps across the booth: the scan, then the re-scan */}
       {f >= 236 && f < 262 && <rect x={S3 - 98 + scan * 190} y={212} width={6} height={BELT_TOP - 214} fill={flagged ? C.vermWash : C.ultraWash} opacity={0.8} />}
+      {rescan > 0 && rescan < 1 && <rect x={S3 - 98 + rescan * 190} y={212} width={6} height={BELT_TOP - 214} fill={C.sapWash} opacity={0.8} />}
 
       {/* the monitor on its arm */}
       <line x1={S3} y1={190} x2={S3} y2={176} stroke={C.ink} strokeWidth={3} />
       <g filter={`url(#${ID}-rough)`}>
-        <rect x={S3 - 110} y={20} width={220} height={156} rx={8} fill={C.ink} />
-        <rect x={S3 - 102} y={28} width={204} height={140} rx={4} fill="#20283d" />
+        <rect x={MX} y={6} width={240} height={170} rx={8} fill={C.ink} />
+        <rect x={MX + 8} y={14} width={224} height={154} rx={4} fill="#20283d" />
       </g>
-      <text x={S3 - 92} y={46} fontFamily={mono} fontSize={12.5} fill={C.ultraSoft}>
-        trivy image · layers
+      <text x={MX + 16} y={32} fontFamily={mono} fontSize={12.5} fill={f >= 300 ? C.sapWash : C.ultraSoft}>
+        {f >= 300 ? '0 critical · pushed to acr ✓' : f >= 236 ? 'trivy image · backend' : 'docker build …'}
       </text>
       {LAYERS.map((l, i) => {
-        const y = 58 + i * 26
+        const y = 42 + i * 22
         const isDeps = l === 'dependencies'
         const shown = prog(f, 238 + i * 4, 246 + i * 4)
         const bad = isDeps && flagged
-        const out = isDeps ? swap : 0
+        const good = fixed || (isDeps ? false : f >= 258)
         return (
           <g key={l} opacity={shown}>
-            <g transform={`translate(${-out * 240} 0)`} opacity={1 - out}>
-              <rect x={S3 - 92} y={y} width={184} height={20} rx={3} fill={bad ? C.vermWash : '#34405e'} stroke={bad ? C.vermSoft : '#4c5b82'} />
-              <text x={S3 - 84} y={y + 14} fontFamily={mono} fontSize={13} fill={C.paper}>
-                {l}
-              </text>
-              {bad && (
-                <text x={S3 + 84} y={y + 14} textAnchor="end" fontFamily={mono} fontSize={13} fill={C.paper}>
-                  2 critical
-                </text>
-              )}
-            </g>
-            {isDeps && swap > 0 && (
-              <g transform={`translate(${(1 - swap) * 240} 0)`}>
-                <rect x={S3 - 92} y={y} width={184} height={20} rx={3} fill={C.sapWash} stroke={C.sapSoft} />
-                <text x={S3 - 84} y={y + 14} fontFamily={mono} fontSize={13} fill={C.ink}>
-                  dependencies, upgraded
-                </text>
-              </g>
-            )}
-            {!isDeps && fixed && (
-              <text x={S3 + 84} y={y + 14} textAnchor="end" fontFamily={mono} fontSize={13} fill={C.sapSoft}>
-                ok
-              </text>
-            )}
+            <rect x={MX + 16} y={y} width={208} height={18} rx={3} fill={bad ? C.vermWash : isDeps && fixed ? C.sapWash : '#34405e'} stroke={bad ? C.vermSoft : '#4c5b82'} />
+            <text x={MX + 24} y={y + 13} fontFamily={mono} fontSize={12.5} fill={isDeps && fixed ? C.ink : C.paper}>
+              {isDeps && fixed ? 'dependencies, upgraded' : l}
+            </text>
+            <text x={MX + 216} y={y + 13} textAnchor="end" fontFamily={mono} fontSize={12.5} fill={bad ? C.paper : C.sapSoft}>
+              {bad ? '2 CRITICAL' : good ? 'ok' : ''}
+            </text>
           </g>
+        )
+      })}
+      {/* the two findings, then the same two upgraded */}
+      {CVES.map((c, j) => {
+        const show = prog(f, 258 + j * 4, 264 + j * 4)
+        const up = f >= 276 + j * 3
+        return (
+          <text key={c.pkg} x={MX + 16} y={144 + j * 18} fontFamily={mono} fontSize={12} fill={up ? C.sapSoft : C.vermSoft} opacity={show} style={{ whiteSpace: 'pre' }}>
+            {up ? `${c.pkg.padEnd(6)}${c.to.padEnd(8)}upgraded ✓` : `${c.pkg.padEnd(6)}${c.from.padEnd(8)}${c.id}`}
+          </text>
         )
       })}
 
@@ -194,6 +206,9 @@ function BuildFactory({ f }: { f: number }) {
         <rect x={S3 + 124} y={236} width={58} height={40} rx={4} fill={C.paper} stroke={C.ink} strokeWidth={1.8} />
         <line x1={S3 + 132} y1={250} x2={S3 + 174} y2={250} stroke={C.ink} strokeWidth={2} />
       </g>
+      <text x={S3 + 153} y={270} textAnchor="middle" fontFamily={mono} fontSize={10} fill={C.graphite}>
+        cyclonedx
+      </text>
       <g opacity={paper > 0 ? 1 : 0}>
         <path
           d={`M ${S3 + 134} 250 L ${S3 + 172} 250 L ${S3 + 172} ${250 - paper * 70} l -6 4 l -6 -4 l -6 4 l -6 -4 l -6 4 l -8 -4 Z`}
@@ -213,8 +228,8 @@ function BuildFactory({ f }: { f: number }) {
 }
 
 // 05: OWASP ZAP probes the running app; the funnel runs the smoke test.
-function Verification() {
-  const f = useCurrentFrame()
+function Verification({ t: f }: { t: number }) {
+  if (f < 0 || f > 44) return null
   return (
     <g>
       {[0, 1, 2, 3].map((i) => {
@@ -243,7 +258,7 @@ const WASHES = [
 ]
 
 export const Conveyor: React.FC<{ viewWidth: number }> = ({ viewWidth }) => {
-  const f = useCurrentFrame()
+  const f = useCurrentFrame() / 2 // in beats
   const cx = cxAt(f)
   const cy = cyAt(f)
   const onHook = f >= 348 && f <= 406
@@ -295,10 +310,10 @@ export const Conveyor: React.FC<{ viewWidth: number }> = ({ viewWidth }) => {
           {/* stations */}
           <ScannerArch f={f} active={active(0)} />
           <Tag x={S1 - 120} y={52} f={f} at={96}>
-            gitleaks ✓ no secrets
+            gitleaks ✓ 0 secrets
           </Tag>
-          <Tag x={S1 + 20} y={20} f={f} at={104}>
-            checkov ✓
+          <Tag x={S1 - 120} y={18} f={f} at={104}>
+            checkov ✓ 9 skipped
           </Tag>
 
           <TestRig f={f} />
@@ -354,6 +369,27 @@ export const Conveyor: React.FC<{ viewWidth: number }> = ({ viewWidth }) => {
             <text x={1206} y={390} fontFamily={serif} fontSize={13} letterSpacing={1.6} fill={C.paper}>
               ΚΥΒΕΡΝΗΤΗΣ
             </text>
+            <text x={1420} y={390} fontFamily={mono} fontSize={12} fill={C.paper} opacity={0.85}>
+              aks · 2 nodes
+            </text>
+            {/* Key Vault on the bridge face; at rollout it hands the new pod its secrets over CSI */}
+            <g transform="translate(1530 318)">
+              <rect x={0} y={0} width={30} height={24} rx={3} fill={C.ochreSoft} stroke={C.ink} strokeWidth={1.4} />
+              <circle cx={15} cy={10} r={3.2} fill={C.ink} />
+              <path d="M 13.6 12 L 13 18 L 17 18 L 16.4 12 Z" fill={C.ink} />
+            </g>
+            {(() => {
+              const k = prog(f, 410, 424, ease.inOut)
+              if (k <= 0) return null
+              const kx = lerp(1545, SLOT.x + BOX.w - 18, k)
+              const ky = lerp(318, SLOT.y + 10, k) - Math.sin(k * Math.PI) * 40
+              return (
+                <g transform={`translate(${kx} ${ky}) rotate(${k * 360})`} opacity={k < 1 ? 1 : 0.9}>
+                  <circle cx={-5} cy={0} r={4} fill="none" stroke={C.ochre} strokeWidth={2} />
+                  <path d="M -1 0 L 8 0 M 5 0 L 5 3 M 8 0 L 8 4" fill="none" stroke={C.ochre} strokeWidth={2} strokeLinecap="round" />
+                </g>
+              )
+            })()}
             <g transform="translate(1500 340)">
               <g style={{ rotate: `${osc(f, 120) * 10}deg` }}>
                 <Helm r={11} />
@@ -384,10 +420,11 @@ export const Conveyor: React.FC<{ viewWidth: number }> = ({ viewWidth }) => {
           {/* the container on the hook */}
           {onHook && <Box id={ID} x={cx - BOX.w / 2} y={cy - BOX.h / 2} w={BOX.w} h={BOX.h} fill={C.sapSoft} whale />}
 
-          <Sequence from={406} durationInFrames={44} layout="none" name="Verification">
-            <Verification />
-          </Sequence>
-          <Tag x={1320} y={200} f={f} at={428}>
+          <Verification t={f - 406} />
+          <Tag x={1210} y={268} f={f} at={422}>
+            key vault csi ✓
+          </Tag>
+          <Tag x={1320} y={200} f={f} at={432}>
             zap ✓ · smoke ✓
           </Tag>
 
