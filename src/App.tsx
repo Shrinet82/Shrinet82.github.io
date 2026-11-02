@@ -278,7 +278,7 @@ function Record() {
           </ul>
         </div>
         <aside className="me">
-          <img src="/assets/profile.jpg" alt="Shashwat Pratap Singh" width={590} height={1024} loading="lazy" decoding="async" />
+          <img src={`${import.meta.env.BASE_URL}assets/profile.jpg`} alt="Shashwat Pratap Singh" width={590} height={1024} loading="lazy" decoding="async" />
           <div>
             <p className="me-name">{profile.name}</p>
             <p className="me-line">

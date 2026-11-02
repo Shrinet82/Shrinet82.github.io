@@ -1,7 +1,7 @@
 # Shrinet82.github.io
 
 Portfolio of Shashwat Pratap Singh (Shrinet), independent DevOps and platform engineer.
-Live at https://shrinet82.github.io/
+Live at https://shrinet82.github.io/devops-portfolio/
 
 The site is a control plane. Each flagship project (Aegis Observe, OPSIE,
 Aegis Governance, Zero-Trust on AKS) is a Remotion composition that your scroll
